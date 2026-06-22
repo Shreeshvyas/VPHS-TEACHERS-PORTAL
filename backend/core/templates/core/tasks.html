@@ -1,0 +1,166 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Tasks Management - Teacher Portal{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="header-title">
+        <h1>Tasks & Assignments</h1>
+        <p>Assign work to students, monitor completion status, and log submissions.</p>
+    </div>
+</div>
+
+<div class="dashboard-layout" style="grid-template-columns: 2fr 1fr;">
+    <!-- Left Column: Tasks Board -->
+    <div class="panel">
+        <div class="panel-header" style="margin-bottom: 24px;">
+            <h2 class="panel-title">Tasks Board</h2>
+            <div style="display: flex; gap: 8px;">
+                <a href="{% url 'tasks' %}?status=ALL" class="btn {% if status_filter == 'ALL' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px;">All</a>
+                <a href="{% url 'tasks' %}?status=PENDING" class="btn {% if status_filter == 'PENDING' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px;">Pending</a>
+                <a href="{% url 'tasks' %}?status=COMPLETED" class="btn {% if status_filter == 'COMPLETED' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px;">Completed</a>
+            </div>
+        </div>
+
+        <div class="task-board">
+            <!-- Column 1: Pending Tasks -->
+            {% if status_filter == 'ALL' or status_filter == 'PENDING' %}
+            <div class="task-column">
+                <div class="task-column-header">
+                    <span>Pending Tasks</span>
+                    <span class="badge badge-pending" style="border-radius: 6px;">
+                        {% if status_filter == 'ALL' %}
+                            <!-- Loop count in JS or simple filter in template -->
+                            <i class="fa-solid fa-clock"></i>
+                        {% else %}
+                            {{ tasks.count }}
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px;">
+                    {% for task in tasks %}
+                        {% if task.status == 'PENDING' %}
+                        <div class="task-card">
+                            <div class="task-card-header">
+                                <div class="task-card-title"><strong>{{ task.title }}</strong></div>
+                                <a href="{% url 'complete_task' task.id %}?next=tasks" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;" title="Mark Complete">
+                                    <i class="fa-solid fa-check"></i>
+                                </a>
+                            </div>
+                            <div class="task-card-desc">{{ task.description|default:"No description provided" }}</div>
+                            <div class="task-card-footer">
+                                <span style="font-weight: 500; color: var(--text-primary);">
+                                    <i class="fa-solid fa-user-graduate" style="color: var(--primary); margin-right: 4px;"></i>{{ task.student.name }}
+                                </span>
+                                <span style="color: var(--warning);">
+                                    <i class="fa-regular fa-calendar-times" style="margin-right: 4px;"></i>{{ task.due_date }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <div style="text-align: center; color: var(--text-secondary); padding: 30px 0;">
+                            No pending tasks.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Column 2: Completed Tasks -->
+            {% if status_filter == 'ALL' or status_filter == 'COMPLETED' %}
+            <div class="task-column" style="background-color: rgba(16, 185, 129, 0.02); border-color: rgba(16, 185, 129, 0.1);">
+                <div class="task-column-header">
+                    <span>Completed Tasks</span>
+                    <span class="badge badge-completed" style="border-radius: 6px;">
+                        {% if status_filter == 'ALL' %}
+                            <i class="fa-solid fa-check-double"></i>
+                        {% else %}
+                            {{ tasks.count }}
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px;">
+                    {% for task in tasks %}
+                        {% if task.status == 'COMPLETED' %}
+                        <div class="task-card" style="border-color: rgba(16, 185, 129, 0.15);">
+                            <div class="task-card-header">
+                                <div class="task-card-title" style="color: var(--text-secondary); text-decoration: line-through;">{{ task.title }}</div>
+                                <span style="color: var(--success); font-size: 13px;"><i class="fa-solid fa-circle-check"></i></span>
+                            </div>
+                            <div class="task-card-desc" style="color: var(--text-muted);">{{ task.description|default:"No description" }}</div>
+                            <div class="task-card-footer">
+                                <span style="color: var(--text-secondary);">
+                                    <i class="fa-solid fa-user-graduate" style="margin-right: 4px;"></i>{{ task.student.name }}
+                                </span>
+                                <span style="color: var(--text-muted);">
+                                    Completed: {{ task.updated_at|date:"M d, Y" }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <div style="text-align: center; color: var(--text-secondary); padding: 30px 0;">
+                            No completed tasks.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Create Task Form -->
+    <div class="panel">
+        <h2 class="panel-title" style="margin-bottom: 20px;">
+            <i class="fa-solid fa-circle-plus" style="color: var(--primary); margin-right: 8px;"></i>
+            Assign New Task
+        </h2>
+        
+        <form method="POST" action="{% url 'tasks' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="student_id">Select Student *</label>
+                <select id="student_id" name="student_id" required class="form-control">
+                    <option value="" disabled selected>-- Choose Student --</option>
+                    {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.name }} (Roll: {{ student.roll_number }} - {{ student.grade }})</option>
+                    {% empty %}
+                        <option value="" disabled>No students rostered</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Task Title *</label>
+                <input type="text" id="title" name="title" required class="form-control" placeholder="e.g. Solve Math Chapter 3">
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" placeholder="Provide task details..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="due_date">Due Date *</label>
+                <input type="date" id="due_date" name="due_date" required class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; height: 42px;">
+                <i class="fa-solid fa-plus"></i> Assign Task
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var dateInput = document.getElementById('due_date');
+        if (dateInput && !dateInput.value) {
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var yyyy = today.getFullYear();
+            dateInput.value = yyyy + '-' + mm + '-' + dd;
+        }
+    });
+</script>
+{% endblock %}

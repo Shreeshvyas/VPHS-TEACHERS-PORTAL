@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Teacher Portal{% endblock %}</title>
+    <!-- Premium Fonts -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v={% now 'U' %}">
+    <!-- FontAwesome for Rich Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <div class="logo-icon">T</div>
+            <div class="logo-text">TeacherPortal</div>
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item {% if active_tab == 'dashboard' %}active{% endif %}">
+                <a href="{% url 'dashboard' %}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_tab == 'students' %}active{% endif %}">
+                <a href="{% url 'students' %}">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>Students</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_tab == 'attendance' %}active{% endif %}">
+                <a href="{% url 'attendance' %}">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Attendance</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_tab == 'gradebook' %}active{% endif %}">
+                <a href="{% url 'gradebook' %}">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Gradebook</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_tab == 'tasks' %}active{% endif %}">
+                <a href="{% url 'tasks' %}">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Tasks</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_tab == 'notices' %}active{% endif %}">
+                <a href="{% url 'notices' %}">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>Noticeboard</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">{{ user.username }}</div>
+                    <div class="user-role">Teacher</div>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+    {% endif %}
+
+    <!-- Main Content Wrapper -->
+    <main class="main-content" style="{% if not user.is_authenticated %}margin-left: 0; max-width: 100vw; display: flex; align-items: center; justify-content: center; padding: 20px;{% endif %}">
+        
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {% if message.tags == 'success' %}
+                    <i class="fa-solid fa-circle-check"></i>
+                {% elif message.tags == 'error' %}
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                {% else %}
+                    <i class="fa-solid fa-circle-info"></i>
+                {% endif %}
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,187 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Teacher Portal{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="header-title">
+        <h1>Dashboard Overview</h1>
+        <p>Real-time updates on student attendance, coursework, and grades.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'attendance' %}" class="btn btn-primary">
+            <i class="fa-solid fa-calendar-days"></i> Mark Attendance
+        </a>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<section class="metrics-grid">
+    <div class="metric-card">
+        <span class="metric-label">Total Students</span>
+        <span class="metric-value">{{ total_students }}</span>
+        <span class="metric-trend" style="color: var(--primary)">
+            <i class="fa-solid fa-users"></i> Rostered
+        </span>
+    </div>
+    
+    <div class="metric-card success" style="--success: #10b981; --success-glow: rgba(16, 185, 129, 0.15)">
+        <span class="metric-label">Avg Attendance</span>
+        <span class="metric-value">{{ avg_attendance }}%</span>
+        <div style="background-color: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 4px;">
+            <div style="width: {{ avg_attendance }}%; height: 100%; background: linear-gradient(to right, var(--success), #34d399); border-radius: 4px;"></div>
+        </div>
+    </div>
+
+    <div class="metric-card" style="--primary: #3b82f6; --primary-glow: rgba(59, 130, 246, 0.15)">
+        <span class="metric-label">Class Grade Average</span>
+        <span class="metric-value">{{ avg_grade }}%</span>
+        <div style="background-color: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 4px;">
+            <div style="width: {{ avg_grade }}%; height: 100%; background: linear-gradient(to right, var(--primary), #60a5fa); border-radius: 4px;"></div>
+        </div>
+    </div>
+
+    <div class="metric-card warning">
+        <span class="metric-label">Pending Tasks</span>
+        <span class="metric-value">{{ pending_tasks }}</span>
+        <span class="metric-trend" style="color: var(--warning)">
+            <i class="fa-solid fa-clock-rotate-left"></i> Awaiting completion
+        </span>
+    </div>
+</section>
+
+<!-- Split Layout -->
+<div class="dashboard-layout">
+    <!-- Left Column: Student Roster Summary -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Student performance logs</h2>
+            <a href="{% url 'students' %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                View All
+            </a>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Grade/Class</th>
+                        <th>Attendance</th>
+                        <th>Avg Score</th>
+                        <th>Pending Tasks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stats in student_stats %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'student_detail' stats.student.id %}" style="color: white; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-user-graduate" style="color: var(--primary);"></i>
+                                {{ stats.student.name }}
+                            </a>
+                        </td>
+                        <td>{{ stats.student.grade }}</td>
+                        <td>
+                            <span class="badge {% if stats.attendance < 75 %}badge-pending{% else %}badge-completed{% endif %}">
+                                {{ stats.attendance }}%
+                            </span>
+                        </td>
+                        <td>
+                            {% if stats.grade is not null %}
+                                <strong>{{ stats.grade }}%</strong>
+                            {% else %}
+                                <span style="color: var(--text-muted);">No tests</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if stats.pending_tasks > 0 %}
+                                <span class="badge badge-pending">{{ stats.pending_tasks }} pending</span>
+                            {% else %}
+                                <span class="badge badge-completed">Clean</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">
+                            <i class="fa-solid fa-user-slash" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                            No students registered yet. <a href="{% url 'students' %}" style="color: var(--primary);">Add students now</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Column: Noticeboard & Remarks Activity -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Notices Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Noticeboard Broadcasts</h2>
+                <a href="{% url 'notices' %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                    Post Notice
+                </a>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for notice in recent_notices %}
+                <div style="padding: 12px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px;">
+                    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: white;">{{ notice.title }}</div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.4;">
+                        {{ notice.content|truncatewords:15 }}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        <i class="fa-regular fa-clock"></i> {{ notice.created_at|date:"M d, Y H:i" }}
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; color: var(--text-secondary); padding: 20px 0; font-size: 13px;">
+                    <i class="fa-solid fa-bullhorn" style="font-size: 20px; color: var(--text-muted); margin-bottom: 6px; display: block;"></i>
+                    No class circulars broadcasted yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Remarks Feed -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Recent Behavior Log</h2>
+            </div>
+            
+            <div class="activity-list">
+                {% for remark in recent_remarks %}
+                <div class="activity-item">
+                    <div class="activity-icon" style="color: {% if remark.type == 'POSITIVE' %}var(--success){% else %}var(--danger){% endif %};">
+                        {% if remark.type == 'POSITIVE' %}
+                            <i class="fa-solid fa-award"></i>
+                        {% else %}
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        {% endif %}
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-text">
+                            <strong>{{ remark.student.name }}</strong> received: 
+                            <span style="color: {% if remark.type == 'POSITIVE' %}var(--success){% else %}var(--danger){% endif %}; font-weight: 500;">
+                                "{{ remark.title }}"
+                            </span>
+                        </div>
+                        <div class="activity-time">
+                            {{ remark.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; color: var(--text-secondary); padding: 20px 0; font-size: 13px;">
+                    <i class="fa-solid fa-award" style="font-size: 20px; color: var(--text-muted); margin-bottom: 6px; display: block;"></i>
+                    No conduct feedback logged yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

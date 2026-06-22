@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Students - Teacher Portal{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="header-title">
+        <h1>Students Roster</h1>
+        <p>Search, view details, and register new students in your class.</p>
+    </div>
+</div>
+
+<div class="dashboard-layout" style="grid-template-columns: 2fr 1fr;">
+    <!-- Left Panel: Search and List -->
+    <div class="panel">
+        <!-- Search bar -->
+        <div class="panel-header" style="flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+            <h2 class="panel-title">Registered Students</h2>
+            <form method="GET" action="{% url 'students' %}" style="display: flex; gap: 8px; flex-grow: 1; max-width: 400px;">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search by name, roll, class..." class="form-control" style="padding: 8px 12px; font-size: 13px;">
+                <button type="submit" class="btn btn-secondary" style="padding: 8px 14px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                {% if query %}
+                    <a href="{% url 'students' %}" class="btn btn-secondary" style="padding: 8px 14px;" title="Clear Search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Student Cards Grid -->
+        <div class="student-grid">
+            {% for student in students %}
+            <a href="{% url 'student_detail' student.id %}" class="student-card">
+                <div>
+                    <div class="student-card-header">
+                        <div class="student-card-avatar">
+                            {{ student.name|slice:":1"|upper }}
+                        </div>
+                        <div class="student-card-meta">
+                            <h3>{{ student.name }}</h3>
+                            <p>Roll No: {{ student.roll_number }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="student-card-details">
+                        <div><i class="fa-solid fa-school" style="width: 18px;"></i> Grade: <strong>{{ student.grade }}</strong></div>
+                        {% if student.email %}
+                            <div style="word-break: break-all;"><i class="fa-solid fa-envelope" style="width: 18px;"></i> {{ student.email }}</div>
+                        {% endif %}
+                        {% if student.guardian_phone %}
+                            <div><i class="fa-solid fa-phone" style="width: 18px;"></i> {{ student.guardian_phone }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="student-card-footer">
+                    <span>
+                        <i class="fa-solid fa-list-check" style="color: var(--primary);"></i>
+                        Tasks: {{ student.task_count }}
+                    </span>
+                    {% if student.pending_task_count > 0 %}
+                        <span class="badge badge-pending">{{ student.pending_task_count }} pending</span>
+                    {% else %}
+                        <span class="badge badge-completed">Clean</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary); padding: 60px 0;">
+                <i class="fa-solid fa-graduation-cap" style="font-size: 40px; margin-bottom: 16px; display: block; color: var(--text-muted);"></i>
+                {% if query %}
+                    No students match your search criteria.
+                {% else %}
+                    No students registered yet. Fill out the form to add a student.
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right Panel: Add Student Form -->
+    <div class="panel">
+        <h2 class="panel-title" style="margin-bottom: 20px;">
+            <i class="fa-solid fa-user-plus" style="color: var(--primary); margin-right: 8px;"></i>
+            Register Student
+        </h2>
+        
+        <form method="POST" action="{% url 'students' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Student Name *</label>
+                <input type="text" id="name" name="name" required class="form-control" placeholder="e.g. John Doe">
+            </div>
+            <div class="form-group">
+                <label for="roll_number">Roll Number *</label>
+                <input type="text" id="roll_number" name="roll_number" required class="form-control" placeholder="e.g. 101">
+            </div>
+            <div class="form-group">
+                <label for="grade">Class / Grade *</label>
+                <input type="text" id="grade" name="grade" required class="form-control" placeholder="e.g. Class 10-A">
+            </div>
+            <div class="form-group">
+                <label for="email">Student/Parent Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="e.g. parent@email.com">
+            </div>
+            <div class="form-group">
+                <label for="guardian_name">Guardian Name</label>
+                <input type="text" id="guardian_name" name="guardian_name" class="form-control" placeholder="e.g. Robert Doe">
+            </div>
+            <div class="form-group">
+                <label for="guardian_phone">Guardian Phone</label>
+                <input type="text" id="guardian_phone" name="guardian_phone" class="form-control" placeholder="e.g. +91 9876543210">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; height: 42px;">
+                <i class="fa-solid fa-plus"></i> Add Student
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

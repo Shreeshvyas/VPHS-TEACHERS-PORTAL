@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Daily Attendance Register - Teacher Portal{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="header-title">
+        <h1>Daily Attendance Register</h1>
+        <p>Record or update class attendance logs for rostered students.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <!-- Date picker filter bar -->
+    <div class="panel-header" style="flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+        <h2 class="panel-title">
+            <i class="fa-regular fa-calendar-check" style="color: var(--primary); margin-right: 8px;"></i>
+            Register for: <span style="color: white; font-weight: bold;">{{ selected_date }}</span>
+        </h2>
+        <form method="GET" action="{% url 'attendance' %}" style="display: flex; gap: 8px; align-items: center;">
+            <label for="date-select" style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Change Date:</label>
+            <input type="date" id="date-select" name="date" value="{{ date_str }}" class="form-control" style="padding: 6px 12px; font-size: 13px; width: 160px;" onchange="this.form.submit()">
+        </form>
+    </div>
+
+    <!-- Attendance marking form -->
+    <form method="POST" action="{% url 'attendance' %}?date={{ date_str }}">
+        {% csrf_token %}
+        <div class="table-container" style="margin-bottom: 24px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Roll No.</th>
+                        <th>Student Name</th>
+                        <th>Class / Grade</th>
+                        <th>Attendance Status</th>
+                        <th>Remarks / Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in student_records %}
+                    <tr>
+                        <td><strong>{{ record.student.roll_number }}</strong></td>
+                        <td>
+                            <a href="{% url 'student_detail' record.student.id %}" style="color: white; font-weight: 500; text-decoration: none;">
+                                {{ record.student.name }}
+                            </a>
+                        </td>
+                        <td>{{ record.student.grade }}</td>
+                        <td>
+                            <!-- Radio switches styled with CSS -->
+                            <div class="attendance-switch-group">
+                                <input type="radio" id="present_{{ record.student.id }}" name="status_{{ record.student.id }}" value="PRESENT" class="attendance-radio-input" {% if record.status == 'PRESENT' %}checked{% endif %}>
+                                <label for="present_{{ record.student.id }}" class="attendance-radio-label">P</label>
+
+                                <input type="radio" id="absent_{{ record.student.id }}" name="status_{{ record.student.id }}" value="ABSENT" class="attendance-radio-input" {% if record.status == 'ABSENT' %}checked{% endif %}>
+                                <label for="absent_{{ record.student.id }}" class="attendance-radio-label">A</label>
+
+                                <input type="radio" id="late_{{ record.student.id }}" name="status_{{ record.student.id }}" value="LATE" class="attendance-radio-input" {% if record.status == 'LATE' %}checked{% endif %}>
+                                <label for="late_{{ record.student.id }}" class="attendance-radio-label">L</label>
+
+                                <input type="radio" id="leave_{{ record.student.id }}" name="status_{{ record.student.id }}" value="LEAVE" class="attendance-radio-input" {% if record.status == 'LEAVE' %}checked{% endif %}>
+                                <label for="leave_{{ record.student.id }}" class="attendance-radio-label">LV</label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" name="remarks_{{ record.student.id }}" value="{{ record.remarks }}" placeholder="e.g. sick leave, late bus" class="form-control" style="padding: 6px 10px; font-size: 13px;">
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">
+                            <i class="fa-solid fa-graduation-cap" style="font-size: 32px; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+                            No students rostered to mark attendance. <a href="{% url 'students' %}" style="color: var(--primary);">Add students now</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if student_records %}
+        <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="height: 44px; padding: 0 30px;">
+                <i class="fa-solid fa-floppy-disk"></i> Save Attendance Register
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

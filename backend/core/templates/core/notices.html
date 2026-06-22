@@ -1,0 +1,69 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Noticeboard - Teacher Portal{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="header-title">
+        <h1>Class Noticeboard & Circulars</h1>
+        <p>Broadcast notices, test reminders, or school guidelines to parents and students.</p>
+    </div>
+</div>
+
+<div class="dashboard-layout" style="grid-template-columns: 2fr 1fr;">
+    <!-- Left Column: Notices Feed -->
+    <div class="panel">
+        <h2 class="panel-title" style="margin-bottom: 24px;">Broadcast History</h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for notice in notices %}
+            <article class="notice-card">
+                <div class="notice-card-header">
+                    <h3 class="notice-card-title">{{ notice.title }}</h3>
+                    <a href="{% url 'delete_notice' notice.id %}" class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" title="Delete Notice" onclick="return confirm('Are you sure you want to delete this announcement?');">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </a>
+                </div>
+                <div class="notice-card-meta">
+                    <span><i class="fa-solid fa-user-tie" style="margin-right: 4px;"></i> By {{ notice.teacher.username }}</span>
+                    <span style="margin-left: 16px;"><i class="fa-regular fa-clock" style="margin-right: 4px;"></i> Broadcasted: {{ notice.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="notice-card-content">
+                    {{ notice.content|linebreaks }}
+                </div>
+            </article>
+            {% empty %}
+            <div style="text-align: center; color: var(--text-secondary); padding: 60px 0;">
+                <i class="fa-solid fa-bullhorn" style="font-size: 44px; color: var(--text-muted); margin-bottom: 16px; display: block;"></i>
+                No announcements broadcasted yet. Use the panel on the right to post a notice.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right Column: Broadcast Notice Form -->
+    <div class="panel">
+        <h2 class="panel-title" style="margin-bottom: 20px;">
+            <i class="fa-solid fa-bullhorn" style="color: var(--primary); margin-right: 8px;"></i>
+            Broadcast Announcement
+        </h2>
+        
+        <form method="POST" action="{% url 'notices' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="title">Notice Title *</label>
+                <input type="text" id="title" name="title" placeholder="e.g. Science Project Submission Date" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="content">Announcement Content *</label>
+                <textarea id="content" name="content" placeholder="Write notice details for parents and students..." required class="form-control" style="min-height: 150px;"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; height: 42px;">
+                <i class="fa-solid fa-paper-plane"></i> Broadcast Notice
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
