@@ -7,7 +7,7 @@ import '../models/behavior_remark.dart';
 import '../models/notice.dart';
 
 class ApiService {
-  static String baseUrl = 'http://127.0.0.1:8000/api';
+  static String baseUrl = 'https://teacher.vyaspublicschool.in/api';
 
   static Map<String, String> _getHeaders(String? token) {
     final headers = {
