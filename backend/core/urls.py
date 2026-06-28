@@ -11,6 +11,7 @@ router.register(r'attendance', views.AttendanceViewSet, basename='api-attendance
 router.register(r'grades', views.GradeViewSet, basename='api-grade')
 router.register(r'remarks', views.BehaviorRemarkViewSet, basename='api-remark')
 router.register(r'notices', views.NoticeViewSet, basename='api-notice')
+router.register(r'teachers', views.TeacherViewSet, basename='api-teacher')
 
 urlpatterns = [
     # Web Portal URLs
@@ -27,9 +28,14 @@ urlpatterns = [
     path('gradebook/', views.web_gradebook, name='gradebook'),
     path('notices/', views.web_notices, name='notices'),
     path('notices/<int:pk>/delete/', views.web_delete_notice, name='delete_notice'),
+    path('profile/', views.web_profile, name='web_profile'),
+    path('teachers/', views.web_teachers, name='web_teachers'),
+    path('teachers/<int:pk>/', views.web_teacher_detail, name='web_teacher_detail'),
     
     # API endpoints for Flutter App
     path('api/', include(router.urls)),
     path('api/login/', views.CustomObtainAuthToken.as_view(), name='api_login'),
     path('api/dashboard/', views.ApiDashboardStatsView.as_view(), name='api_dashboard'),
+    path('api/profile/', views.UserProfileView.as_view(), name='api_profile'),
 ]
+

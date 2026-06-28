@@ -413,4 +413,101 @@ class ApiService {
       throw Exception('Network error: $e');
     }
   }
+
+  // 17. Update Teacher Profile (Multipart upload for photos/documents)
+  Future<Map<String, dynamic>> updateProfile({
+    required String token,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String classAssigned,
+    required String esicId,
+    required String bankAccount,
+    required String bankName,
+    required String ifsc,
+    String? profilePicPath,
+    String? docPath,
+  }) async {
+    final url = Uri.parse('$baseUrl/profile/');
+    try {
+      final request = http.MultipartRequest('PUT', url);
+      request.headers.addAll({
+        'Authorization': 'Token $token',
+        'Accept': 'application/json',
+      });
+      
+      request.fields.addAll({
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone': phone,
+        'class_assigned': classAssigned,
+        'esic_id': esicId,
+        'bank_account_number': bankAccount,
+        'bank_name': bankName,
+        'ifsc_code': ifsc,
+      });
+
+      if (profilePicPath != null && profilePicPath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('profile_picture', profilePicPath));
+      }
+      if (docPath != null && docPath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('document_file', docPath));
+      }
+
+      final response = await http.Response.fromStream(await request.send());
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to update profile: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Network error updating profile: $e');
+    }
+  }
+
+  // 18. Fetch All Teachers (Super Admin only)
+  Future<List<dynamic>> getAllTeachers(String token) async {
+    final url = Uri.parse('$baseUrl/teachers/');
+    try {
+      final response = await http.get(
+        url,
+        headers: _getHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch teachers directory');
+      }
+    } catch (e) {
+      throw Exception('Network error fetching teachers: $e');
+    }
+  }
+
+  // 19. Update Teacher Profile by Admin (Super Admin only)
+  Future<Map<String, dynamic>> updateTeacherByAdmin({
+    required String token,
+    required int teacherId,
+    required Map<String, dynamic> data,
+  }) async {
+    final url = Uri.parse('$baseUrl/teachers/$teacherId/');
+    try {
+      final response = await http.patch(
+        url,
+        headers: _getHeaders(token),
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to update teacher: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Network error updating teacher: $e');
+    }
+  }
 }

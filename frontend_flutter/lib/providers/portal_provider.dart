@@ -17,6 +17,7 @@ class PortalProvider extends ChangeNotifier {
   List<Grade> _grades = [];
   List<BehaviorRemark> _remarks = [];
   List<Notice> _notices = [];
+  List<dynamic> _teachers = [];
   
   Map<String, dynamic>? _dashboardStats;
   
@@ -33,6 +34,7 @@ class PortalProvider extends ChangeNotifier {
   List<Grade> get grades => _grades;
   List<BehaviorRemark> get remarks => _remarks;
   List<Notice> get notices => _notices;
+  List<dynamic> get teachers => _teachers;
   
   Map<String, dynamic>? get dashboardStats => _dashboardStats;
   bool get isLoading => _isLoading;
@@ -118,6 +120,12 @@ class PortalProvider extends ChangeNotifier {
       // Fetch noticeboards
       final noticeList = await _apiService.getNotices(_token!);
       _notices = noticeList;
+      
+      // Fetch teachers list (if super admin)
+      if (_currentUser != null && _currentUser!['is_super_admin'] == true) {
+        final teacherList = await _apiService.getAllTeachers(_token!);
+        _teachers = teacherList;
+      }
       
       _isLoading = false;
       notifyListeners();
@@ -347,6 +355,96 @@ class PortalProvider extends ChangeNotifier {
     try {
       await _apiService.deleteNotice(_token!, noticeId);
       await refreshAll();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // 13. Fetch All Teachers (Super Admin only)
+  Future<void> fetchTeachers() async {
+    if (!isAuthenticated) return;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _teachers = await _apiService.getAllTeachers(_token!);
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+    }
+  }
+
+  // 14. Update Logged-In Teacher's Profile (with file paths)
+  Future<bool> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String classAssigned,
+    required String esicId,
+    required String bankAccount,
+    required String bankName,
+    required String ifsc,
+    String? profilePicPath,
+    String? docPath,
+  }) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final userData = await _apiService.updateProfile(
+        token: _token!,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        classAssigned: classAssigned,
+        esicId: esicId,
+        bankAccount: bankAccount,
+        bankName: bankName,
+        ifsc: ifsc,
+        profilePicPath: profilePicPath,
+        docPath: docPath,
+      );
+      _currentUser = userData;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // 15. Update Teacher Profile as Admin (Super Admin only)
+  Future<bool> updateTeacherByAdmin(int teacherId, Map<String, dynamic> data) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final updatedUser = await _apiService.updateTeacherByAdmin(
+        token: _token!,
+        teacherId: teacherId,
+        data: data,
+      );
+      // Update local teachers list
+      final index = _teachers.indexWhere((t) => t['id'] == teacherId);
+      if (index != -1) {
+        _teachers[index] = updatedUser;
+      }
+      _isLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
       _isLoading = false;

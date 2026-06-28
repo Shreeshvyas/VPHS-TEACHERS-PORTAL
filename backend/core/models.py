@@ -125,3 +125,42 @@ class Notice(models.Model):
 
     def __str__(self):
         return f"{self.title} - By {self.teacher.username}"
+
+
+class TeacherProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    class_assigned = models.CharField(max_length=100, blank=True, null=True, verbose_name="Class Assigned (e.g. Class 10-A)")
+    total_leaves = models.IntegerField(default=15)
+    leaves_taken = models.IntegerField(default=0)
+    esic_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="ESIC ID")
+    bank_account_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Bank Account Number")
+    bank_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Bank Name")
+    ifsc_code = models.CharField(max_length=20, blank=True, null=True, verbose_name="IFSC Code")
+    profile_picture = models.FileField(upload_to='profile_pics/', blank=True, null=True)
+    document_file = models.FileField(upload_to='teacher_documents/', blank=True, null=True, verbose_name="Verification Document")
+
+    @property
+    def remaining_leaves(self):
+        return max(0, self.total_leaves - self.leaves_taken)
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
+
+
+# Signals to automatically manage profiles
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        TeacherProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        TeacherProfile.objects.create(user=instance)
+

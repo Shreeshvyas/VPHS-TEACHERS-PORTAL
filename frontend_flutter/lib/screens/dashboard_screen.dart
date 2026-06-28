@@ -8,6 +8,8 @@ import 'task_list_screen.dart';
 import 'attendance_screen.dart';
 import 'gradebook_screen.dart';
 import 'notice_screen.dart';
+import 'teacher_list_screen.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,16 +29,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  final List<Widget> _screens = [
-    const HomeDashboardView(),
-    const StudentListScreen(),
-    const TaskListScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<PortalProvider>(context);
     final user = provider.currentUser;
+    final bool isSuperAdmin = user?['is_super_admin'] == true;
+
+    final List<Widget> screens = isSuperAdmin
+        ? [
+            const HomeDashboardView(),
+            const TeacherListScreen(),
+            const StudentListScreen(),
+          ]
+        : [
+            const HomeDashboardView(),
+            const StudentListScreen(),
+            const TaskListScreen(),
+            const ProfileScreen(),
+          ];
+
+    int currentIndex = _selectedIndex;
+    if (currentIndex >= screens.length) {
+      currentIndex = 0;
+    }
+
+    String title = 'Portal';
+    if (isSuperAdmin) {
+      if (currentIndex == 0) title = 'Super Admin Dashboard';
+      if (currentIndex == 1) title = 'Teachers Directory';
+      if (currentIndex == 2) title = 'All Students';
+    } else {
+      if (currentIndex == 0) title = 'Teacher Dashboard';
+      if (currentIndex == 1) title = 'Student Roster';
+      if (currentIndex == 2) title = 'Tasks & Assignments';
+      if (currentIndex == 3) title = 'My Profile';
+    }
+
+    String name = user?['first_name'] != null && user!['first_name'].toString().isNotEmpty
+        ? '${user['first_name']} ${user['last_name'] ?? ''}'.trim()
+        : (user?['username'] ?? 'User');
+    String subtitle = isSuperAdmin ? '$name  |  Super Admin' : '$name  |  School Teacher';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0B10),
@@ -47,20 +79,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _selectedIndex == 0
-                  ? 'Teacher Portal Dashboard'
-                  : _selectedIndex == 1
-                      ? 'Student Roster'
-                      : 'Tasks & Assignments',
+              title,
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            if (user != null && _selectedIndex == 0)
+            if (user != null && currentIndex == 0)
               Text(
-                'Sarah Conner  |  School Teacher',
+                subtitle,
                 style: GoogleFonts.outfit(
                   fontSize: 11,
                   color: const Color(0xFF9CA3AF),
@@ -96,13 +124,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: provider.isLoading && provider.students.isEmpty
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : _screens[_selectedIndex],
+          : screens[currentIndex],
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Color(0xFF262938), width: 1)),
         ),
         child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
+          currentIndex: currentIndex,
           onTap: (index) {
             setState(() {
               _selectedIndex = index;
@@ -113,23 +141,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
           unselectedItemColor: const Color(0xFF9CA3AF),
           selectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           unselectedLabelStyle: GoogleFonts.outfit(),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school),
-              label: 'Students',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt_outlined),
-              activeIcon: Icon(Icons.list_alt),
-              label: 'Tasks',
-            ),
-          ],
+          type: BottomNavigationBarType.fixed,
+          items: isSuperAdmin
+              ? const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard_outlined),
+                    activeIcon: Icon(Icons.dashboard),
+                    label: 'Dashboard',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.people_alt_outlined),
+                    activeIcon: Icon(Icons.people_alt),
+                    label: 'Teachers',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.school_outlined),
+                    activeIcon: Icon(Icons.school),
+                    label: 'Students',
+                  ),
+                ]
+              : const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard_outlined),
+                    activeIcon: Icon(Icons.dashboard),
+                    label: 'Dashboard',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.school_outlined),
+                    activeIcon: Icon(Icons.school),
+                    label: 'Students',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.list_alt_outlined),
+                    activeIcon: Icon(Icons.list_alt),
+                    label: 'Tasks',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_outline),
+                    activeIcon: Icon(Icons.person),
+                    label: 'Profile',
+                  ),
+                ],
         ),
       ),
     );
@@ -217,39 +269,7 @@ class HomeDashboardView extends StatelessWidget {
               style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildShortcutButton(
-                    context,
-                    label: 'Mark Daily\nAttendance',
-                    icon: Icons.calendar_today,
-                    color: const Color(0xFF10B981),
-                    screen: const AttendanceScreen(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildShortcutButton(
-                    context,
-                    label: 'Manage class\nGradebook',
-                    icon: Icons.book_outlined,
-                    color: const Color(0xFF3B82F6),
-                    screen: const GradebookScreen(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildShortcutButton(
-                    context,
-                    label: 'Broadcast\nAnnouncement',
-                    icon: Icons.campaign_outlined,
-                    color: const Color(0xFF6366F1),
-                    screen: const NoticeScreen(),
-                  ),
-                ),
-              ],
-            ),
+            builderCurrentUserShortcut(context, provider),
             const SizedBox(height: 24),
 
             // Circular notices feed
@@ -443,6 +463,63 @@ class HomeDashboardView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget builderCurrentUserShortcut(BuildContext context, PortalProvider provider) {
+    final bool isSuperAdmin = provider.currentUser?['is_super_admin'] == true;
+    if (isSuperAdmin) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildShortcutButton(
+              context,
+              label: 'Broadcast\nAnnouncement',
+              icon: Icons.campaign_outlined,
+              color: const Color(0xFF6366F1),
+              screen: const NoticeScreen(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Spacer(),
+          const SizedBox(width: 8),
+          const Spacer(),
+        ],
+      );
+    } else {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildShortcutButton(
+              context,
+              label: 'Mark Daily\nAttendance',
+              icon: Icons.calendar_today,
+              color: const Color(0xFF10B981),
+              screen: const AttendanceScreen(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildShortcutButton(
+              context,
+              label: 'Manage class\nGradebook',
+              icon: Icons.book_outlined,
+              color: const Color(0xFF3B82F6),
+              screen: const GradebookScreen(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildShortcutButton(
+              context,
+              label: 'Broadcast\nAnnouncement',
+              icon: Icons.campaign_outlined,
+              color: const Color(0xFF6366F1),
+              screen: const NoticeScreen(),
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildEmptyFeed(String msg) {

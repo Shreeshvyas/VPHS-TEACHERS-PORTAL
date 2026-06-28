@@ -1,0 +1,92 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Teachers Directory - Super Admin{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="header-title">
+        <h1>Teachers Directory</h1>
+        <p>View all school teachers, check class assignments, monitor leaves status, and view document uploads.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header" style="margin-bottom: 24px;">
+        <h2 class="panel-title">Active Teachers ({{ teachers.count }})</h2>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+                    <th style="padding: 16px 12px;">Teacher Name</th>
+                    <th style="padding: 16px 12px;">Username</th>
+                    <th style="padding: 16px 12px;">Class Assigned</th>
+                    <th style="padding: 16px 12px;">Contact</th>
+                    <th style="padding: 16px 12px; text-align: center;">Leaves (Remaining / Total)</th>
+                    <th style="padding: 16px 12px; text-align: center;">Status</th>
+                    <th style="padding: 16px 12px; text-align: center;">Identity Doc</th>
+                    <th style="padding: 16px 12px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in teachers %}
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-primary);">
+                    <td style="padding: 16px 12px; font-weight: bold; display: flex; align-items: center; gap: 10px;">
+                        {% if t.profile.profile_picture %}
+                            <img src="{{ t.profile.profile_picture.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                                {{ t.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                        {{ t.first_name }} {{ t.last_name|default:"" }}
+                        {% if t.is_superuser or t.is_staff %}
+                            <span class="badge badge-completed" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Admin</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 12px; color: var(--text-secondary);">@{{ t.username }}</td>
+                    <td style="padding: 16px 12px;">
+                        {% if t.profile.class_assigned %}
+                            <span style="font-weight: 600; color: var(--primary);">{{ t.profile.class_assigned }}</span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Not Assigned</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 12px; color: var(--text-secondary);">
+                        <div>{{ t.email }}</div>
+                        <div style="font-size: 11px; margin-top: 2px;">{{ t.profile.phone|default:"-" }}</div>
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        <strong>{{ t.profile.remaining_leaves }}</strong> / {{ t.profile.total_leaves }}
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        {% if t.profile.remaining_leaves > 3 %}
+                            <span class="badge badge-completed">Good</span>
+                        {% elif t.profile.remaining_leaves > 0 %}
+                            <span class="badge badge-pending">Low</span>
+                        {% else %}
+                            <span class="badge badge-pending" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; border-color: rgba(220, 53, 69, 0.2);">Exhausted</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        {% if t.profile.document_file %}
+                            <a href="{{ t.profile.document_file.url }}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-file-pdf" style="color: red;"></i> View
+                            </a>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 11px;">Missing</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 12px; text-align: right;">
+                        <a href="{% url 'web_teacher_detail' t.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 11px;">
+                            <i class="fa-solid fa-eye"></i> Manage
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

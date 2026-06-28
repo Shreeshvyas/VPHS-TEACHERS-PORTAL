@@ -45,6 +45,8 @@ class StudentViewSet(viewsets.ModelViewSet):
     serializer_class = StudentSerializer
 
     def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return Student.objects.all()
         return Student.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
@@ -55,11 +57,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return Task.objects.all()
         return Task.objects.filter(student__teacher=self.request.user)
 
     def perform_create(self, serializer):
         student = serializer.validated_data['student']
-        if student.teacher != self.request.user:
+        if not (self.request.user.is_superuser or self.request.user.is_staff) and student.teacher != self.request.user:
             return Response({"error": "Unauthorized student select"}, status=status.HTTP_401_UNAUTHORIZED)
         serializer.save()
 
@@ -68,6 +72,8 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     serializer_class = AttendanceSerializer
 
     def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return Attendance.objects.all()
         return Attendance.objects.filter(student__teacher=self.request.user)
 
     @action(detail=False, methods=['post'], url_path='batch')
@@ -91,7 +97,11 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             remarks = rec.get('remarks', '')
 
             try:
-                student = Student.objects.get(id=student_id, teacher=request.user)
+                if request.user.is_superuser or request.user.is_staff:
+                    student = Student.objects.get(id=student_id)
+                else:
+                    student = Student.objects.get(id=student_id, teacher=request.user)
+                
                 attendance, created = Attendance.objects.update_or_create(
                     student=student,
                     date=target_date,
@@ -99,7 +109,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 )
                 saved_records.append(AttendanceSerializer(attendance).data)
             except Student.DoesNotExist:
-                continue # Skip invalid students not belonging to this teacher
+                continue # Skip invalid students
 
         return Response({
             "message": f"Successfully updated {len(saved_records)} attendance logs.",
@@ -111,11 +121,13 @@ class GradeViewSet(viewsets.ModelViewSet):
     serializer_class = GradeSerializer
 
     def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return Grade.objects.all()
         return Grade.objects.filter(student__teacher=self.request.user)
 
     def perform_create(self, serializer):
         student = serializer.validated_data['student']
-        if student.teacher != self.request.user:
+        if not (self.request.user.is_superuser or self.request.user.is_staff) and student.teacher != self.request.user:
             return Response({"error": "Unauthorized student select"}, status=status.HTTP_401_UNAUTHORIZED)
         serializer.save()
 
@@ -124,11 +136,13 @@ class BehaviorRemarkViewSet(viewsets.ModelViewSet):
     serializer_class = BehaviorRemarkSerializer
 
     def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return BehaviorRemark.objects.all()
         return BehaviorRemark.objects.filter(student__teacher=self.request.user)
 
     def perform_create(self, serializer):
         student = serializer.validated_data['student']
-        if student.teacher != self.request.user:
+        if not (self.request.user.is_superuser or self.request.user.is_staff) and student.teacher != self.request.user:
             return Response({"error": "Unauthorized student select"}, status=status.HTTP_401_UNAUTHORIZED)
         serializer.save()
 
@@ -137,6 +151,8 @@ class NoticeViewSet(viewsets.ModelViewSet):
     serializer_class = NoticeSerializer
 
     def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return Notice.objects.all()
         return Notice.objects.filter(teacher=self.request.user)
 
     def perform_create(self, serializer):
@@ -146,10 +162,16 @@ class NoticeViewSet(viewsets.ModelViewSet):
 class ApiDashboardStatsView(APIView):
     def get(self, request):
         teacher = request.user
-        students = Student.objects.filter(teacher=teacher)
-        tasks = Task.objects.filter(student__teacher=teacher)
-        notices = Notice.objects.filter(teacher=teacher)
-        remarks = BehaviorRemark.objects.filter(student__teacher=teacher)
+        if request.user.is_superuser or request.user.is_staff:
+            students = Student.objects.all()
+            tasks = Task.objects.all()
+            notices = Notice.objects.all()
+            remarks = BehaviorRemark.objects.all()
+        else:
+            students = Student.objects.filter(teacher=teacher)
+            tasks = Task.objects.filter(student__teacher=teacher)
+            notices = Notice.objects.filter(teacher=teacher)
+            remarks = BehaviorRemark.objects.filter(student__teacher=teacher)
 
         total_students = students.count()
         total_tasks = tasks.count()
@@ -183,6 +205,69 @@ class ApiDashboardStatsView(APIView):
             'recent_notices': recent_notices,
             'recent_remarks': recent_remarks
         })
+
+
+from django.contrib.auth.models import User
+from .models import TeacherProfile
+from .serializers import TeacherProfileSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+
+class UserProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        profile, created = TeacherProfile.objects.get_or_create(user=request.user)
+        user = request.user
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        if 'email' in request.data:
+            user.email = request.data['email']
+        user.save()
+
+        serializer = TeacherProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(UserSerializer(user).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TeacherViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return User.objects.all().order_by('username')
+        return User.objects.filter(id=self.request.user.id)
+
+    def update(self, request, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.is_staff):
+            return Response({"detail": "Only Super Admins can update other teachers."}, status=status.HTTP_403_FORBIDDEN)
+        
+        user = self.get_object()
+        profile, created = TeacherProfile.objects.get_or_create(user=user)
+        
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        if 'email' in request.data:
+            user.email = request.data['email']
+        user.save()
+
+        serializer = TeacherProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(UserSerializer(user).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 # ==========================================
@@ -222,10 +307,16 @@ def web_logout(request):
 @login_required
 def web_dashboard(request):
     teacher = request.user
-    students = Student.objects.filter(teacher=teacher)
-    tasks = Task.objects.filter(student__teacher=teacher)
-    notices = Notice.objects.filter(teacher=teacher)
-    remarks = BehaviorRemark.objects.filter(student__teacher=teacher)
+    if request.user.is_superuser or request.user.is_staff:
+        students = Student.objects.all()
+        tasks = Task.objects.all()
+        notices = Notice.objects.all()
+        remarks = BehaviorRemark.objects.all()
+    else:
+        students = Student.objects.filter(teacher=teacher)
+        tasks = Task.objects.filter(student__teacher=teacher)
+        notices = Notice.objects.filter(teacher=teacher)
+        remarks = BehaviorRemark.objects.filter(student__teacher=teacher)
     
     total_students = students.count()
     total_tasks = tasks.count()
@@ -286,12 +377,17 @@ def web_dashboard(request):
     return render(request, 'core/dashboard.html', context)
 
 
+
 @login_required
 def web_students(request):
     teacher = request.user
     query = request.GET.get('q', '')
     
-    students = Student.objects.filter(teacher=teacher)
+    if request.user.is_superuser or request.user.is_staff:
+        students = Student.objects.all()
+    else:
+        students = Student.objects.filter(teacher=teacher)
+        
     if query:
         students = students.filter(
             Q(name__icontains=query) | 
@@ -307,11 +403,18 @@ def web_students(request):
         guardian_name = request.POST.get('guardian_name')
         guardian_phone = request.POST.get('guardian_phone')
         
-        if Student.objects.filter(teacher=teacher, roll_number=roll_number).exists():
-            messages.error(request, f"Student with roll number {roll_number} already exists!")
+        # Get assigned teacher
+        teacher_id = request.POST.get('teacher_id')
+        if (request.user.is_superuser or request.user.is_staff) and teacher_id:
+            assigned_teacher = get_object_or_404(User, id=teacher_id)
+        else:
+            assigned_teacher = teacher
+            
+        if Student.objects.filter(teacher=assigned_teacher, roll_number=roll_number).exists():
+            messages.error(request, f"Student with roll number {roll_number} already exists for this class!")
         else:
             Student.objects.create(
-                teacher=teacher,
+                teacher=assigned_teacher,
                 name=name,
                 roll_number=roll_number,
                 grade=grade,
@@ -326,14 +429,18 @@ def web_students(request):
         'students': students,
         'query': query,
         'active_tab': 'students',
+        'teachers': User.objects.filter(is_superuser=False) if (request.user.is_superuser or request.user.is_staff) else None
     }
     return render(request, 'core/students.html', context)
 
 
+
 @login_required
 def web_student_detail(request, pk):
-    teacher = request.user
-    student = get_object_or_404(Student, pk=pk, teacher=teacher)
+    if request.user.is_superuser or request.user.is_staff:
+        student = get_object_or_404(Student, pk=pk)
+    else:
+        student = get_object_or_404(Student, pk=pk, teacher=teacher)
     tasks = student.tasks.all()
     attendances = student.attendances.all()
     grades = student.grades.all()
@@ -594,8 +701,95 @@ def web_complete_task(request, pk):
 
 @login_required
 def web_delete_student(request, pk):
-    teacher = request.user
-    student = get_object_or_404(Student, pk=pk, teacher=teacher)
+    if request.user.is_superuser or request.user.is_staff:
+        student = get_object_or_404(Student, pk=pk)
+    else:
+        student = get_object_or_404(Student, pk=pk, teacher=teacher)
     student.delete()
     messages.warning(request, f"Student {student.name} and their tasks have been removed.")
     return redirect('students')
+
+
+@login_required
+def web_profile(request):
+    user = request.user
+    profile, created = TeacherProfile.objects.get_or_create(user=user)
+    
+    if request.method == 'POST':
+        # Update user fields
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.email = request.POST.get('email', '')
+        user.save()
+        
+        # Update profile fields
+        profile.phone = request.POST.get('phone', '')
+        profile.class_assigned = request.POST.get('class_assigned', '')
+        profile.esic_id = request.POST.get('esic_id', '')
+        profile.bank_account_number = request.POST.get('bank_account_number', '')
+        profile.bank_name = request.POST.get('bank_name', '')
+        profile.ifsc_code = request.POST.get('ifsc_code', '')
+        
+        if 'profile_picture' in request.FILES:
+            profile.profile_picture = request.FILES['profile_picture']
+        if 'document_file' in request.FILES:
+            profile.document_file = request.FILES['document_file']
+            
+        profile.save()
+        messages.success(request, "Your profile has been updated successfully!")
+        return redirect('web_profile')
+        
+    context = {
+        'profile': profile,
+        'active_tab': 'profile',
+    }
+    return render(request, 'core/profile.html', context)
+
+
+@login_required
+def web_teachers(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, "Only Super Admins can access this page.")
+        return redirect('dashboard')
+        
+    teachers = User.objects.all().order_by('username')
+    context = {
+        'teachers': teachers,
+        'active_tab': 'teachers',
+    }
+    return render(request, 'core/teachers.html', context)
+
+
+@login_required
+def web_teacher_detail(request, pk):
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, "Only Super Admins can access this page.")
+        return redirect('dashboard')
+        
+    teacher_user = get_object_or_404(User, pk=pk)
+    profile, created = TeacherProfile.objects.get_or_create(user=teacher_user)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'adjust_leaves':
+            try:
+                profile.total_leaves = int(request.POST.get('total_leaves', 15))
+                profile.leaves_taken = int(request.POST.get('leaves_taken', 0))
+                profile.save()
+                messages.success(request, f"Leaves adjusted for {teacher_user.username} successfully!")
+            except ValueError:
+                messages.error(request, "Invalid leaves values entered.")
+        elif action == 'assign_class':
+            profile.class_assigned = request.POST.get('class_assigned', '')
+            profile.save()
+            messages.success(request, f"Class assigned for {teacher_user.username} updated!")
+        return redirect('web_teacher_detail', pk=pk)
+        
+    context = {
+        'teacher_user': teacher_user,
+        'profile': profile,
+        'active_tab': 'teachers',
+        'students': Student.objects.filter(teacher=teacher_user)
+    }
+    return render(request, 'core/teacher_detail.html', context)
+

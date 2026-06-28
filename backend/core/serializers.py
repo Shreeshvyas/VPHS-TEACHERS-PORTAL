@@ -1,11 +1,30 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Student, Task, Attendance, Grade, BehaviorRemark, Notice
+from .models import Student, Task, Attendance, Grade, BehaviorRemark, Notice, TeacherProfile
+
+class TeacherProfileSerializer(serializers.ModelSerializer):
+    remaining_leaves = serializers.ReadOnlyField()
+
+    class Meta:
+        model = TeacherProfile
+        fields = [
+            'phone', 'class_assigned', 'total_leaves', 'leaves_taken',
+            'remaining_leaves', 'esic_id', 'bank_account_number',
+            'bank_name', 'ifsc_code', 'profile_picture', 'document_file'
+        ]
+
 
 class UserSerializer(serializers.ModelSerializer):
+    profile = TeacherProfileSerializer(read_only=True)
+    is_super_admin = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile', 'is_super_admin']
+
+    def get_is_super_admin(self, obj):
+        return obj.is_superuser or obj.is_staff
+
 
 
 class TaskSerializer(serializers.ModelSerializer):

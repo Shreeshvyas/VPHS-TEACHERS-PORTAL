@@ -26,12 +26,21 @@
                     <span>Dashboard</span>
                 </a>
             </li>
+            {% if user.is_superuser or user.is_staff %}
+            <li class="nav-item {% if active_tab == 'teachers' %}active{% endif %}">
+                <a href="{% url 'web_teachers' %}">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <span>Teachers</span>
+                </a>
+            </li>
+            {% endif %}
             <li class="nav-item {% if active_tab == 'students' %}active{% endif %}">
                 <a href="{% url 'students' %}">
                     <i class="fa-solid fa-graduation-cap"></i>
                     <span>Students</span>
                 </a>
             </li>
+            {% if not user.is_superuser and not user.is_staff %}
             <li class="nav-item {% if active_tab == 'attendance' %}active{% endif %}">
                 <a href="{% url 'attendance' %}">
                     <i class="fa-solid fa-calendar-check"></i>
@@ -50,12 +59,21 @@
                     <span>Tasks</span>
                 </a>
             </li>
+            {% endif %}
             <li class="nav-item {% if active_tab == 'notices' %}active{% endif %}">
                 <a href="{% url 'notices' %}">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span>Noticeboard</span>
                 </a>
             </li>
+            {% if not user.is_superuser and not user.is_staff %}
+            <li class="nav-item {% if active_tab == 'profile' %}active{% endif %}">
+                <a href="{% url 'web_profile' %}">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
         
         <div class="sidebar-footer">
@@ -64,8 +82,8 @@
                     {{ user.username|slice:":1"|upper }}
                 </div>
                 <div class="user-info">
-                    <div class="user-name">{{ user.username }}</div>
-                    <div class="user-role">Teacher</div>
+                    <div class="user-name">{{ user.first_name|default:user.username }}</div>
+                    <div class="user-role">{% if user.is_superuser or user.is_staff %}Super Admin{% else %}Teacher{% endif %}</div>
                 </div>
             </div>
             <a href="{% url 'logout' %}" class="logout-btn">
