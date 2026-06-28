@@ -814,8 +814,6 @@ def web_profile(request):
         
         if 'profile_picture' in request.FILES:
             profile.profile_picture = request.FILES['profile_picture']
-        if 'document_file' in request.FILES:
-            profile.document_file = request.FILES['document_file']
             
         profile.save()
         messages.success(request, "Your profile has been updated successfully!")
@@ -826,6 +824,47 @@ def web_profile(request):
         'active_tab': 'profile',
     }
     return render(request, 'core/profile.html', context)
+
+
+@login_required
+def web_upload_document(request):
+    if request.method == 'POST' and request.FILES.get('document_file'):
+        profile, created = TeacherProfile.objects.get_or_create(user=request.user)
+        uploaded_file = request.FILES['document_file']
+        
+        # Create a TeacherDocument
+        doc = TeacherDocument.objects.create(
+            profile=profile,
+            file=uploaded_file,
+            name=uploaded_file.name
+        )
+        messages.success(request, f"Document '{doc.name}' uploaded successfully!")
+    else:
+        messages.error(request, "Failed to upload document.")
+    return redirect('web_profile')
+
+
+@login_required
+def web_delete_document(request, pk):
+    try:
+        # Teachers can only delete their own documents (unless superuser)
+        if request.user.is_superuser or request.user.is_staff:
+            doc = TeacherDocument.objects.get(pk=pk)
+        else:
+            profile = TeacherProfile.objects.get(user=request.user)
+            doc = TeacherDocument.objects.get(pk=pk, profile=profile)
+            
+        name = doc.name
+        doc.delete()
+        messages.warning(request, f"Document '{name}' has been deleted.")
+    except TeacherDocument.DoesNotExist:
+        messages.error(request, "Document not found or access denied.")
+    
+    # Redirect back to referring page (profile or teacher detail)
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('web_profile')
 
 
 @login_required

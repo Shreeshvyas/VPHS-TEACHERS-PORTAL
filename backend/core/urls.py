@@ -29,6 +29,8 @@ urlpatterns = [
     path('notices/', views.web_notices, name='notices'),
     path('notices/<int:pk>/delete/', views.web_delete_notice, name='delete_notice'),
     path('profile/', views.web_profile, name='web_profile'),
+    path('profile/documents/upload/', views.web_upload_document, name='web_upload_document'),
+    path('profile/documents/<int:pk>/delete/', views.web_delete_document, name='web_delete_document'),
     path('teachers/', views.web_teachers, name='web_teachers'),
     path('teachers/<int:pk>/', views.web_teacher_detail, name='web_teacher_detail'),
     

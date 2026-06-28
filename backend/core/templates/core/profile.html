@@ -108,28 +108,69 @@
                 <input type="text" id="ifsc_code" name="ifsc_code" value="{{ profile.ifsc_code|default:'' }}" class="form-control" placeholder="e.g. SBIN0001234">
             </div>
 
-            <h3 style="font-size: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px; color: var(--primary);">Profile Picture & Verification Files</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="form-group">
-                    <label for="profile_picture">Update Profile Photo</label>
-                    <input type="file" id="profile_picture" name="profile_picture" class="form-control" style="padding: 8px;">
-                </div>
-                <div class="form-group">
-                    <label for="document_file">Upload Identity/Verification Document (PDF/JPG)</label>
-                    <input type="file" id="document_file" name="document_file" class="form-control" style="padding: 8px;">
-                    {% if profile.document_file %}
-                        <p style="margin-top: 6px; font-size: 12px; color: var(--text-secondary);">
-                            <i class="fa-solid fa-file-pdf" style="color: red; margin-right: 4px;"></i>
-                            Current: <a href="{{ profile.document_file.url }}" target="_blank" style="color: var(--primary); text-decoration: underline;">View Document</a>
-                        </p>
-                    {% endif %}
-                </div>
+            <h3 style="font-size: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px; color: var(--primary);">Profile Picture</h3>
+            <div style="max-width: 50%;" class="form-group">
+                <label for="profile_picture">Update Profile Photo</label>
+                <input type="file" id="profile_picture" name="profile_picture" class="form-control" style="padding: 8px;">
             </div>
 
-            <button type="submit" class="btn btn-primary" style="margin-top: 20px; width: 200px; height: 44px; font-size: 14px;">
+            <button type="submit" class="btn btn-primary" style="margin-top: 20px; width: 200px; height: 44px; font-size: 14px; margin-bottom: 24px;">
                 <i class="fa-solid fa-floppy-disk"></i> Save Profile
             </button>
         </form>
+
+        <!-- Dynamic Documents Section -->
+        <hr style="border-top: 1px solid var(--border-color); margin: 32px 0 24px 0;">
+        <h3 style="font-size: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px; color: var(--primary);">Documents</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-bottom: 40px;">
+            <!-- Left Side: Document Uploader -->
+            <div style="padding: 20px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card);">
+                <form action="{% url 'web_upload_document' %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label style="font-weight: bold; margin-bottom: 8px; display: block;">Upload New Document</label>
+                        <input type="file" name="document_file" class="form-control" style="padding: 8px;" required>
+                        <small style="color: var(--text-secondary); margin-top: 6px; display: block;">PDF, DOC, DOCX, JPG, PNG up to 10MB.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; height: 40px; margin-top: 16px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Document
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Side: Documents List -->
+            <div>
+                {% if profile.documents.all %}
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        {% for doc in profile.documents.all %}
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 14px; border-radius: 10px; display: flex; align-items: center; gap: 12px;">
+                                <i class="fa-solid fa-file-invoice" style="font-size: 26px; color: var(--primary);"></i>
+                                <div style="flex-grow: 1; font-size: 12px; min-width: 0;">
+                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; color: var(--text-primary);">{{ doc.name }}</div>
+                                    <div style="color: var(--text-secondary); font-size: 10px; margin-top: 2px;">Uploaded: {{ doc.uploaded_at|date:"d M Y" }}</div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    {% if doc.file %}
+                                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;" title="Download">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'web_delete_document' doc.pk %}" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border-color: rgba(220, 53, 69, 0.2); color: #dc3545;" onclick="return confirm('Are you sure you want to delete this document?');" title="Delete">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; color: var(--text-muted); padding: 32px; border: 1px dashed var(--border-color); border-radius: 12px;">
+                        <i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 12px; color: var(--text-muted);"></i>
+                        <p style="font-size: 13px; margin: 0;">No documents uploaded yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
