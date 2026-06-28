@@ -37,5 +37,8 @@ urlpatterns = [
     path('api/login/', views.CustomObtainAuthToken.as_view(), name='api_login'),
     path('api/dashboard/', views.ApiDashboardStatsView.as_view(), name='api_dashboard'),
     path('api/profile/', views.UserProfileView.as_view(), name='api_profile'),
+    path('api/profile/change-password/', views.ChangePasswordView.as_view(), name='api_change_password'),
+    path('api/profile/documents/', views.UserProfileDocumentsView.as_view(), name='api_profile_documents'),
+    path('api/profile/documents/<int:pk>/', views.UserProfileDocumentDetailView.as_view(), name='api_profile_document_detail'),
 ]
 

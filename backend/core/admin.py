@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Student, Task, Attendance, Grade, BehaviorRemark, Notice
+from .models import Student, Task, Attendance, Grade, BehaviorRemark, Notice, TeacherProfile, TeacherDocument
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -44,3 +44,15 @@ class BehaviorRemarkAdmin(admin.ModelAdmin):
 class NoticeAdmin(admin.ModelAdmin):
     list_display = ('title', 'teacher', 'created_at')
     search_fields = ('title', 'content')
+
+
+@admin.register(TeacherProfile)
+class TeacherProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'employee_id', 'phone', 'class_assigned')
+    search_fields = ('user__username', 'employee_id', 'phone')
+
+
+@admin.register(TeacherDocument)
+class TeacherDocumentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'profile', 'uploaded_at')
+    search_fields = ('name', 'profile__user__username')

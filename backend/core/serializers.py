@@ -1,16 +1,23 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Student, Task, Attendance, Grade, BehaviorRemark, Notice, TeacherProfile
+from .models import Student, Task, Attendance, Grade, BehaviorRemark, Notice, TeacherProfile, TeacherDocument
+
+class TeacherDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherDocument
+        fields = ['id', 'file', 'name', 'uploaded_at']
+
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
     remaining_leaves = serializers.ReadOnlyField()
+    documents = TeacherDocumentSerializer(many=True, read_only=True)
 
     class Meta:
         model = TeacherProfile
         fields = [
-            'phone', 'class_assigned', 'total_leaves', 'leaves_taken',
+            'employee_id', 'phone', 'class_assigned', 'total_leaves', 'leaves_taken',
             'remaining_leaves', 'esic_id', 'bank_account_number',
-            'bank_name', 'ifsc_code', 'profile_picture', 'document_file'
+            'bank_name', 'ifsc_code', 'profile_picture', 'document_file', 'documents'
         ]
 
 

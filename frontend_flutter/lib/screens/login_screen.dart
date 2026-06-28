@@ -59,18 +59,25 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<PortalProvider>(context);
+    final isDark = provider.isDarkMode;
+
+    final bgColor1 = isDark ? const Color(0xFF0A0B10) : const Color(0xFFF3F4F6);
+    final bgColor2 = isDark ? const Color(0xFF12131A) : const Color(0xFFE5E7EB);
+    final bgColor3 = isDark ? const Color(0xFF1A1C26) : const Color(0xFFD1D5DB);
+
+    final cardBg = isDark ? const Color(0xFF12131A) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB);
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final subtitleColor = isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563);
+    final fieldFill = isDark ? const Color(0xFF1A1C26) : const Color(0xFFF9FAFB);
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0B10),
-              Color(0xFF12131A),
-              Color(0xFF1A1C26),
-            ],
+            colors: [bgColor1, bgColor2, bgColor3],
           ),
         ),
         child: Center(
@@ -79,10 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Card(
-                color: const Color(0xFF12131A),
+                color: cardBg,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24.0),
-                  side: const BorderSide(color: Color(0xFF262938), width: 1),
+                  side: BorderSide(color: borderColor, width: 1),
                 ),
                 elevation: 8,
                 child: Padding(
@@ -122,10 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         Center(
                           child: Text(
                             'VPHS Teachers Portal',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: textColor,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -134,9 +142,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         Center(
                           child: Text(
                             'Log in to manage your classes',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(
                               fontSize: 14,
-                              color: const Color(0xFF9CA3AF),
+                              color: subtitleColor,
                             ),
                           ),
                         ),
@@ -145,16 +154,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Username Field
                         TextFormField(
                           controller: _usernameController,
-                          style: GoogleFonts.outfit(color: Colors.white),
+                          style: GoogleFonts.outfit(color: textColor),
                           decoration: InputDecoration(
                             labelText: 'Username',
-                            labelStyle: GoogleFonts.outfit(color: const Color(0xFF9CA3AF)),
+                            labelStyle: GoogleFonts.outfit(color: subtitleColor),
                             prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF6366F1)),
                             filled: true,
-                            fillColor: const Color(0xFF1A1C26),
+                            fillColor: fieldFill,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF262938)),
+                              borderSide: BorderSide(color: borderColor),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -169,15 +178,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          style: GoogleFonts.outfit(color: Colors.white),
+                          style: GoogleFonts.outfit(color: textColor),
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            labelStyle: GoogleFonts.outfit(color: const Color(0xFF9CA3AF)),
+                            labelStyle: GoogleFonts.outfit(color: subtitleColor),
                             prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6366F1)),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                color: const Color(0xFF9CA3AF),
+                                color: subtitleColor,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -186,10 +195,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                             filled: true,
-                            fillColor: const Color(0xFF1A1C26),
+                            fillColor: fieldFill,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF262938)),
+                              borderSide: BorderSide(color: borderColor),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -237,27 +246,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: Icon(
                             _showSettings ? Icons.arrow_drop_up : Icons.settings_outlined,
                             size: 16,
-                            color: const Color(0xFF9CA3AF),
+                            color: subtitleColor,
                           ),
                           label: Text(
                             _showSettings ? 'Hide API Connection' : 'API Connection Settings',
-                            style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 12),
+                            style: GoogleFonts.outfit(color: subtitleColor, fontSize: 12),
                           ),
                         ),
                         if (_showSettings) ...[
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _urlController,
-                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 12),
+                            style: GoogleFonts.outfit(color: textColor, fontSize: 12),
                             decoration: InputDecoration(
                               labelText: 'API Base URL',
-                              labelStyle: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 12),
+                              labelStyle: GoogleFonts.outfit(color: subtitleColor, fontSize: 12),
                               filled: true,
-                              fillColor: const Color(0xFF1A1C26),
+                              fillColor: fieldFill,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Color(0xFF262938)),
+                                borderSide: BorderSide(color: borderColor),
                               ),
                             ),
                           ),

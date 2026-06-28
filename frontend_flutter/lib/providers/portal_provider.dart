@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student.dart';
 import '../models/task.dart';
 import '../models/grade.dart';
@@ -23,6 +24,11 @@ class PortalProvider extends ChangeNotifier {
   
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isDarkMode = true;
+
+  PortalProvider() {
+    _loadThemePref();
+  }
 
   // Getters
   String? get token => _token;
@@ -39,6 +45,28 @@ class PortalProvider extends ChangeNotifier {
   Map<String, dynamic>? get dashboardStats => _dashboardStats;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get isDarkMode => _isDarkMode;
+
+  Future<void> _loadThemePref() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isDarkMode = prefs.getBool('isDarkMode') ?? true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading theme preference: $e');
+    }
+  }
+
+  Future<void> toggleTheme() async {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isDarkMode', _isDarkMode);
+    } catch (e) {
+      debugPrint('Error saving theme preference: $e');
+    }
+  }
 
   void clearError() {
     _errorMessage = null;
@@ -120,6 +148,10 @@ class PortalProvider extends ChangeNotifier {
       // Fetch noticeboards
       final noticeList = await _apiService.getNotices(_token!);
       _notices = noticeList;
+      
+      // Refresh current user profile details
+      final userData = await _apiService.getProfile(_token!);
+      _currentUser = userData;
       
       // Fetch teachers list (if super admin)
       if (_currentUser != null && _currentUser!['is_super_admin'] == true) {
@@ -392,6 +424,7 @@ class PortalProvider extends ChangeNotifier {
     required String bankAccount,
     required String bankName,
     required String ifsc,
+    String? employeeId,
     String? profilePicPath,
     String? docPath,
   }) async {
@@ -411,6 +444,7 @@ class PortalProvider extends ChangeNotifier {
         bankAccount: bankAccount,
         bankName: bankName,
         ifsc: ifsc,
+        employeeId: employeeId,
         profilePicPath: profilePicPath,
         docPath: docPath,
       );
@@ -443,6 +477,77 @@ class PortalProvider extends ChangeNotifier {
       if (index != -1) {
         _teachers[index] = updatedUser;
       }
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // 16. Change Password
+  Future<bool> changePassword(String oldPassword, String newPassword) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _apiService.changePassword(_token!, oldPassword, newPassword);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // 17. Refresh User Profile
+  Future<void> refreshUserProfile() async {
+    if (!isAuthenticated) return;
+    try {
+      final userData = await _apiService.getProfile(_token!);
+      _currentUser = userData;
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error refreshing user profile: $e");
+    }
+  }
+
+  // 18. Upload Document
+  Future<bool> uploadDocument(String docPath, String name) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _apiService.uploadDocument(_token!, docPath, name);
+      await refreshUserProfile();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // 19. Delete Document
+  Future<bool> deleteDocument(int docId) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _apiService.deleteDocument(_token!, docId);
+      await refreshUserProfile();
       _isLoading = false;
       notifyListeners();
       return true;

@@ -18,10 +18,35 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<PortalProvider>(context);
+
     return MaterialApp(
       title: 'Teacher Portal',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark, // Defaulting to deep premium dark theme
+      themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primaryColor: const Color(0xFF6366F1),
+        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF6366F1),
+          secondary: Color(0xFFA855F7),
+          surface: Colors.white,
+          background: Color(0xFFF3F4F6),
+          error: Colors.redAccent,
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(
+          ThemeData.light().textTheme,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Color(0xFF1F2937)),
+        ),
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+        ),
+      ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: const Color(0xFF6366F1),
@@ -30,6 +55,7 @@ class MyApp extends StatelessWidget {
           primary: Color(0xFF6366F1),
           secondary: Color(0xFFA855F7),
           surface: Color(0xFF12131A),
+          background: Color(0xFF0A0B10),
           error: Colors.redAccent,
         ),
         textTheme: GoogleFonts.outfitTextTheme(
@@ -37,7 +63,11 @@ class MyApp extends StatelessWidget {
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF12131A),
+          elevation: 0,
           iconTheme: IconThemeData(color: Colors.white),
+        ),
+        cardTheme: const CardThemeData(
+          color: Color(0xFF12131A),
         ),
       ),
       home: const LoginScreen(),

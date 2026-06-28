@@ -98,6 +98,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
           IconButton(
+            icon: Icon(
+              provider.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              color: const Color(0xFF6366F1),
+            ),
+            onPressed: () {
+              provider.toggleTheme();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF6366F1)),
             onPressed: () async {
               await provider.refreshAll();

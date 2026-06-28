@@ -426,6 +426,7 @@ class ApiService {
     required String bankAccount,
     required String bankName,
     required String ifsc,
+    String? employeeId,
     String? profilePicPath,
     String? docPath,
   }) async {
@@ -448,6 +449,10 @@ class ApiService {
         'bank_name': bankName,
         'ifsc_code': ifsc,
       });
+
+      if (employeeId != null) {
+        request.fields['employee_id'] = employeeId;
+      }
 
       if (profilePicPath != null && profilePicPath.isNotEmpty) {
         request.files.add(await http.MultipartFile.fromPath('profile_picture', profilePicPath));
@@ -508,6 +513,85 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Network error updating teacher: $e');
+    }
+  }
+
+  // 20. Change password
+  Future<void> changePassword(String token, String oldPassword, String newPassword) async {
+    final url = Uri.parse('$baseUrl/profile/change-password/');
+    try {
+      final response = await http.post(
+        url,
+        headers: _getHeaders(token),
+        body: jsonEncode({
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        }),
+      );
+      if (response.statusCode != 200) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        final errorMsg = body['error'] ?? 'Failed to update password';
+        throw Exception(errorMsg);
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception:', '').trim());
+    }
+  }
+
+  // 21. Get profile detail
+  Future<Map<String, dynamic>> getProfile(String token) async {
+    final url = Uri.parse('$baseUrl/profile/');
+    try {
+      final response = await http.get(
+        url,
+        headers: _getHeaders(token),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      throw Exception('Network error loading profile: $e');
+    }
+  }
+
+  // 22. Upload document
+  Future<Map<String, dynamic>> uploadDocument(String token, String docPath, String name) async {
+    final url = Uri.parse('$baseUrl/profile/documents/');
+    try {
+      final request = http.MultipartRequest('POST', url);
+      request.headers.addAll({
+        'Authorization': 'Token $token',
+        'Accept': 'application/json',
+      });
+      request.fields['name'] = name;
+      request.files.add(await http.MultipartFile.fromPath('file', docPath));
+
+      final response = await http.Response.fromStream(await request.send());
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to upload document: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Network error uploading document: $e');
+    }
+  }
+
+  // 23. Delete document
+  Future<void> deleteDocument(String token, int docId) async {
+    final url = Uri.parse('$baseUrl/profile/documents/$docId/');
+    try {
+      final response = await http.delete(
+        url,
+        headers: _getHeaders(token),
+      );
+      if (response.statusCode != 204) {
+        throw Exception('Failed to delete document');
+      }
+    } catch (e) {
+      throw Exception('Network error deleting document: $e');
     }
   }
 }

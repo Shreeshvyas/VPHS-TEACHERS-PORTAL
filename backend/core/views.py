@@ -208,9 +208,65 @@ class ApiDashboardStatsView(APIView):
 
 
 from django.contrib.auth.models import User
-from .models import TeacherProfile
-from .serializers import TeacherProfileSerializer
+from .models import TeacherProfile, TeacherDocument
+from .serializers import TeacherProfileSerializer, TeacherDocumentSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+        if not old_password or not new_password:
+            return Response({"error": "Both old_password and new_password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(old_password):
+            return Response({"error": "Incorrect old password."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password changed successfully."})
+
+
+class UserProfileDocumentsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        profile, created = TeacherProfile.objects.get_or_create(user=request.user)
+        documents = profile.documents.all()
+        serializer = TeacherDocumentSerializer(documents, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        profile, created = TeacherProfile.objects.get_or_create(user=request.user)
+        file_obj = request.FILES.get('file')
+        name = request.data.get('name')
+        if not file_obj:
+            return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+        if not name:
+            name = file_obj.name
+        doc = TeacherDocument.objects.create(profile=profile, file=file_obj, name=name)
+        return Response(TeacherDocumentSerializer(doc).data, status=status.HTTP_201_CREATED)
+
+
+class UserProfileDocumentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk):
+        try:
+            if request.user.is_superuser or request.user.is_staff:
+                doc = TeacherDocument.objects.get(pk=pk)
+            else:
+                doc = TeacherDocument.objects.get(pk=pk, profile=request.user.profile)
+            doc.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except TeacherDocument.DoesNotExist:
+            return Response({"error": "Document not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -260,6 +316,8 @@ class TeacherViewSet(viewsets.ModelViewSet):
             user.last_name = request.data['last_name']
         if 'email' in request.data:
             user.email = request.data['email']
+        if 'password' in request.data and request.data['password']:
+            user.set_password(request.data['password'])
         user.save()
 
         serializer = TeacherProfileSerializer(profile, data=request.data, partial=True)
