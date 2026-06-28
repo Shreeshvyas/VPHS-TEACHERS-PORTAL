@@ -29,6 +29,7 @@
             <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">@{{ teacher_user.username }}</p>
             
             <div style="border-top: 1px solid var(--border-color); padding-top: 16px; text-align: left; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <div><strong>Employee ID:</strong> <span style="color: var(--primary); font-weight: bold;">{{ profile.employee_id|default:"-" }}</span></div>
                 <div><strong>Email:</strong> {{ teacher_user.email|default:"-" }}</div>
                 <div><strong>Phone:</strong> {{ profile.phone|default:"-" }}</div>
                 <div><strong>ESIC ID:</strong> {{ profile.esic_id|default:"-" }}</div>
@@ -39,21 +40,38 @@
         <!-- Document Review card -->
         <div class="panel" style="padding: 20px;">
             <h3 class="panel-title" style="font-size: 14px; margin-bottom: 12px;">Verification Files</h3>
-            {% if profile.document_file %}
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: red;"></i>
-                    <div style="flex-grow: 1; font-size: 12px; min-width: 0;">
-                        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;">Identity_Verification.pdf</div>
-                        <div style="color: var(--text-secondary); font-size: 10px;">Uploaded File</div>
+            {% if profile.document_file or profile.documents.all %}
+                {% if profile.document_file %}
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: red;"></i>
+                        <div style="flex-grow: 1; font-size: 12px; min-width: 0;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;">Identity_Verification.pdf</div>
+                            <div style="color: var(--text-secondary); font-size: 10px;">Primary Verification Proof</div>
+                        </div>
+                        <a href="{{ profile.document_file.url }}" target="_blank" style="color: var(--primary); font-size: 16px;">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
                     </div>
-                </div>
-                <a href="{{ profile.document_file.url }}" target="_blank" class="btn btn-primary" style="width: 100%; margin-top: 12px; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px;">
-                    <i class="fa-solid fa-download"></i> Download Document
-                </a>
+                {% endif %}
+                
+                {% for doc in profile.documents.all %}
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <i class="fa-solid fa-file-invoice" style="font-size: 24px; color: var(--primary);"></i>
+                        <div style="flex-grow: 1; font-size: 12px; min-width: 0;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;">{{ doc.name }}</div>
+                            <div style="color: var(--text-secondary); font-size: 10px;">Uploaded: {{ doc.uploaded_at|date:"d M Y" }}</div>
+                        </div>
+                        {% if doc.file %}
+                            <a href="{{ doc.file.url }}" target="_blank" style="color: var(--primary); font-size: 16px;">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             {% else %}
                 <div style="text-align: center; color: var(--text-muted); padding: 16px; font-size: 12px;">
                     <i class="fa-solid fa-circle-exclamation" style="font-size: 20px; margin-bottom: 8px; color: var(--text-muted);"></i>
-                    <p>No verification document uploaded yet.</p>
+                    <p>No verification documents uploaded yet.</p>
                 </div>
             {% endif %}
         </div>
@@ -84,12 +102,16 @@
                     </form>
                 </div>
 
-                <!-- Class Assigned Form -->
+                <!-- Class & Employee ID Assignment Form -->
                 <div>
-                    <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: var(--primary);">Class Assignment</h3>
+                    <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: var(--primary);">Employment & Class Assignment</h3>
                     <form method="POST" action="{% url 'web_teacher_detail' teacher_user.id %}">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="assign_class">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label style="font-size: 11px;">Employee ID (Provided by School)</label>
+                            <input type="text" name="employee_id" value="{{ profile.employee_id|default:'' }}" class="form-control" placeholder="e.g. EMP-1002" style="padding: 6px 10px; font-size: 13px;">
+                        </div>
                         <div class="form-group" style="margin-bottom: 14px;">
                             <label style="font-size: 11px;">Assign Class Teacher Role for</label>
                             <input type="text" name="class_assigned" value="{{ profile.class_assigned|default:'' }}" class="form-control" placeholder="e.g. Class 10-A" style="padding: 6px 10px; font-size: 13px;">

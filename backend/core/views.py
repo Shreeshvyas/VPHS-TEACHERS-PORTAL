@@ -839,8 +839,9 @@ def web_teacher_detail(request, pk):
                 messages.error(request, "Invalid leaves values entered.")
         elif action == 'assign_class':
             profile.class_assigned = request.POST.get('class_assigned', '')
+            profile.employee_id = request.POST.get('employee_id', '')
             profile.save()
-            messages.success(request, f"Class assigned for {teacher_user.username} updated!")
+            messages.success(request, f"Class assignment and Employee ID updated for {teacher_user.username}!")
         return redirect('web_teacher_detail', pk=pk)
         
     context = {

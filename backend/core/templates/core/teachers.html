@@ -70,9 +70,9 @@
                         {% endif %}
                     </td>
                     <td style="padding: 16px 12px; text-align: center;">
-                        {% if t.profile.document_file %}
-                            <a href="{{ t.profile.document_file.url }}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-                                <i class="fa-solid fa-file-pdf" style="color: red;"></i> View
+                        {% if t.profile.document_file or t.profile.documents.exists %}
+                            <a href="{% url 'web_teacher_detail' t.id %}" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-file-pdf" style="color: var(--primary);"></i> View Docs
                             </a>
                         {% else %}
                             <span style="color: var(--text-muted); font-size: 11px;">Missing</span>
