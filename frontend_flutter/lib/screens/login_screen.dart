@@ -96,13 +96,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         // App Brand Logo
                         Center(
                           child: Container(
-                            width: 60,
-                            height: 60,
+                            width: 100,
+                            height: 100,
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFFA855F7)],
-                              ),
-                              borderRadius: BorderRadius.circular(16.0),
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(0xFF6366F1).withOpacity(0.3),
@@ -111,13 +109,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ],
                             ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              'T',
-                              style: GoogleFonts.outfit(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                            padding: const EdgeInsets.all(8.0),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/logo.png',
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),
@@ -125,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 20),
                         Center(
                           child: Text(
-                            'Teacher Portal',
+                            'VPHS Teachers Portal',
                             style: GoogleFonts.outfit(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
