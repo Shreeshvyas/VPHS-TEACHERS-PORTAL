@@ -39,21 +39,8 @@
 
         <!-- Document Review card -->
         <div class="panel" style="padding: 20px;">
-            <h3 class="panel-title" style="font-size: 14px; margin-bottom: 12px;">Verification Files</h3>
-            {% if profile.document_file or profile.documents.all %}
-                {% if profile.document_file %}
-                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: red;"></i>
-                        <div style="flex-grow: 1; font-size: 12px; min-width: 0;">
-                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;">Identity_Verification.pdf</div>
-                            <div style="color: var(--text-secondary); font-size: 10px;">Primary Verification Proof</div>
-                        </div>
-                        <a href="{{ profile.document_file.url }}" target="_blank" style="color: var(--primary); font-size: 16px;">
-                            <i class="fa-solid fa-download"></i>
-                        </a>
-                    </div>
-                {% endif %}
-                
+            <h3 class="panel-title" style="font-size: 14px; margin-bottom: 12px;">Documents</h3>
+            {% if profile.documents.all %}
                 {% for doc in profile.documents.all %}
                     <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
                         <i class="fa-solid fa-file-invoice" style="font-size: 24px; color: var(--primary);"></i>
@@ -71,7 +58,7 @@
             {% else %}
                 <div style="text-align: center; color: var(--text-muted); padding: 16px; font-size: 12px;">
                     <i class="fa-solid fa-circle-exclamation" style="font-size: 20px; margin-bottom: 8px; color: var(--text-muted);"></i>
-                    <p>No verification documents uploaded yet.</p>
+                    <p>No documents uploaded yet.</p>
                 </div>
             {% endif %}
         </div>

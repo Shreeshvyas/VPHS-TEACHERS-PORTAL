@@ -250,17 +250,19 @@ class _TaskListScreenState extends State<TaskListScreen> with SingleTickerProvid
     final pendingTasks = tasks.where((t) => t.status == 'PENDING').toList();
     final completedTasks = tasks.where((t) => t.status == 'COMPLETED').toList();
 
+    final isDark = provider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           // Tab bar indicators
           Container(
-            color: const Color(0xFF12131A),
+            color: Theme.of(context).colorScheme.surface,
             child: TabBar(
               controller: _tabController,
               labelColor: const Color(0xFF6366F1),
-              unselectedLabelColor: const Color(0xFF9CA3AF),
+              unselectedLabelColor: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
               indicatorColor: const Color(0xFF6366F1),
               labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
               unselectedLabelStyle: GoogleFonts.outfit(fontSize: 14),
@@ -295,6 +297,7 @@ class _TaskListScreenState extends State<TaskListScreen> with SingleTickerProvid
   }
 
   Widget _buildTasksList(BuildContext context, List<Task> taskList, PortalProvider provider) {
+    final isDark = provider.isDarkMode;
     if (taskList.isEmpty) {
       return RefreshIndicator(
         onRefresh: () => provider.refreshAll(),
@@ -331,9 +334,9 @@ class _TaskListScreenState extends State<TaskListScreen> with SingleTickerProvid
           return Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF12131A),
+              color: Theme.of(context).colorScheme.surface,
               border: Border.all(
-                color: isCompleted ? const Color(0xFF10B981).withOpacity(0.15) : const Color(0xFF262938),
+                color: isCompleted ? const Color(0xFF10B981).withOpacity(0.15) : (isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
               ),
               borderRadius: BorderRadius.circular(16.0),
             ),
@@ -350,21 +353,21 @@ class _TaskListScreenState extends State<TaskListScreen> with SingleTickerProvid
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1A1C26),
+                              color: isDark ? const Color(0xFF1A1C26) : const Color(0xFFF3F4F6),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               task.studentGrade,
                               style: GoogleFonts.outfit(
                                 fontSize: 10,
-                                color: const Color(0xFF9CA3AF),
+                                color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                           Text(
                             'Due: ${task.dueDate.year}-${task.dueDate.month.toString().padLeft(2, '0')}-${task.dueDate.day.toString().padLeft(2, '0')}',
-                            style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 11),
+                            style: GoogleFonts.outfit(color: isDark ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF), fontSize: 11),
                           ),
                         ],
                       ),
@@ -376,7 +379,7 @@ class _TaskListScreenState extends State<TaskListScreen> with SingleTickerProvid
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: isCompleted ? const Color(0xFF9CA3AF) : Colors.white,
+                          color: isCompleted ? const Color(0xFF9CA3AF) : (isDark ? Colors.white : const Color(0xFF1F2937)),
                           decoration: isCompleted ? TextDecoration.lineThrough : null,
                         ),
                       ),
@@ -386,7 +389,7 @@ class _TaskListScreenState extends State<TaskListScreen> with SingleTickerProvid
                           task.description!,
                           style: GoogleFonts.outfit(
                             fontSize: 13,
-                            color: const Color(0xFF9CA3AF),
+                            color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
                           ),
                         ),
                       ],

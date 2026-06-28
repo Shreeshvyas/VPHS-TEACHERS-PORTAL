@@ -154,13 +154,15 @@ class _GradebookScreenState extends State<GradebookScreen> {
       groupedExams[key]!.add(grade);
     }
 
+    final isDark = provider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF12131A),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text(
           'Gradebook',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1F2937)),
         ),
       ),
       body: groupedExams.isEmpty
@@ -200,20 +202,20 @@ class _GradebookScreenState extends State<GradebookScreen> {
                 final avg = examGrades.isNotEmpty ? sum / examGrades.length : 0.0;
 
                 return Card(
-                  color: const Color(0xFF12131A),
+                  color: Theme.of(context).colorScheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: Color(0xFF262938)),
+                    side: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                     title: Text(
                       firstGrade.examName,
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937), fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     subtitle: Text(
                       'Subject: ${firstGrade.subject}  |  Marks: Out of ${firstGrade.maxMarks.round()}',
-                      style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 13),
+                      style: GoogleFonts.outfit(color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563), fontSize: 13),
                     ),
                     trailing: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -362,13 +364,15 @@ class _ExamScoresheetViewState extends State<ExamScoresheetView> {
       _initFields();
     }
 
+    final isDark = provider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF12131A),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text(
           '${widget.examName} - ${widget.subject}',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF1F2937)),
         ),
         actions: [
           IconButton(

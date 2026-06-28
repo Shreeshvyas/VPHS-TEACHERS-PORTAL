@@ -221,7 +221,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           // Search Box
@@ -234,10 +234,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   _searchQuery = val;
                 });
               },
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: provider.isDarkMode ? Colors.white : const Color(0xFF1F2937)),
               decoration: InputDecoration(
                 hintText: 'Search by student name, roll no, grade...',
-                hintStyle: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 14),
+                hintStyle: GoogleFonts.outfit(color: provider.isDarkMode ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF), fontSize: 14),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF6366F1)),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -251,11 +251,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: const Color(0xFF12131A),
+                fillColor: Theme.of(context).colorScheme.surface,
                 contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF262938)),
+                  borderSide: BorderSide(color: provider.isDarkMode ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -296,11 +296,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
                         final hasPending = student.pendingTaskCount > 0;
 
                         return Card(
-                          color: const Color(0xFF12131A),
+                          color: Theme.of(context).colorScheme.surface,
                           margin: const EdgeInsets.only(bottom: 12.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.0),
-                            side: const BorderSide(color: Color(0xFF262938)),
+                            side: BorderSide(color: provider.isDarkMode ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                           ),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16.0),
@@ -321,7 +321,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                     width: 46,
                                     height: 46,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF1A1C26),
+                                      color: provider.isDarkMode ? const Color(0xFF1A1C26) : const Color(0xFFE5E7EB),
                                       borderRadius: BorderRadius.circular(12.0),
                                     ),
                                     alignment: Alignment.center,
@@ -346,7 +346,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                           style: GoogleFonts.outfit(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.white,
+                                            color: provider.isDarkMode ? Colors.white : const Color(0xFF1F2937),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -355,7 +355,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                             Text(
                                               'Roll: ${student.rollNumber}',
                                               style: GoogleFonts.outfit(
-                                                color: const Color(0xFF9CA3AF),
+                                                color: provider.isDarkMode ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -363,7 +363,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                             Text(
                                               'Class: ${student.grade}',
                                               style: GoogleFonts.outfit(
-                                                color: const Color(0xFF9CA3AF),
+                                                color: provider.isDarkMode ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
                                               ),

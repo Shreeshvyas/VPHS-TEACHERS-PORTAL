@@ -202,13 +202,15 @@ class _NoticeScreenState extends State<NoticeScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<PortalProvider>(context);
 
+    final isDark = provider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF12131A),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text(
           'Noticeboard',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1F2937)),
         ),
       ),
       body: RefreshIndicator(
@@ -240,8 +242,8 @@ class _NoticeScreenState extends State<NoticeScreen> {
                   return Container(
                     padding: const EdgeInsets.all(18.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF12131A),
-                      border: Border.all(color: const Color(0xFF262938)),
+                      color: Theme.of(context).colorScheme.surface,
+                      border: Border.all(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                       borderRadius: BorderRadius.circular(16.0),
                     ),
                     child: Column(
@@ -257,7 +259,7 @@ class _NoticeScreenState extends State<NoticeScreen> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                                 ),
                               ),
                             ),
@@ -277,26 +279,26 @@ class _NoticeScreenState extends State<NoticeScreen> {
                             const SizedBox(width: 4),
                             Text(
                               'By: ${notice.teacherName}',
-                              style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 11),
+                              style: GoogleFonts.outfit(color: isDark ? const Color(0xFF6B7280) : const Color(0xFF4B5563), fontSize: 11),
                             ),
                             const SizedBox(width: 14),
                             const Icon(Icons.schedule, size: 12, color: Color(0xFF6B7280)),
                             const SizedBox(width: 4),
                             Text(
                               '${notice.createdAt.year}-${notice.createdAt.month.toString().padLeft(2, '0')}-${notice.createdAt.day.toString().padLeft(2, '0')} ${notice.createdAt.hour.toString().padLeft(2, '0')}:${notice.createdAt.minute.toString().padLeft(2, '0')}',
-                              style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 11),
+                              style: GoogleFonts.outfit(color: isDark ? const Color(0xFF6B7280) : const Color(0xFF4B5563), fontSize: 11),
                             ),
                           ],
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12.0),
-                          child: Divider(color: Color(0xFF262938)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
+                          child: Divider(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                         ),
                         Text(
                           notice.content,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
-                            color: const Color(0xFFD1D5DB),
+                            color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF4B5563),
                             height: 1.5,
                           ),
                         ),

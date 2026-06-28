@@ -33,6 +33,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<PortalProvider>(context);
     final teachersList = provider.teachers;
+    final isDark = provider.isDarkMode;
 
     final filteredTeachers = teachersList.where((t) {
       final name = '${t['first_name'] ?? ''} ${t['last_name'] ?? ''}'.toLowerCase();
@@ -42,7 +43,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -113,22 +114,22 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                                 final int taken = profile?['leaves_taken'] ?? 0;
                                 final int remaining = allowed - taken;
 
-                                return Card(
-                                  color: const Color(0xFF12131A),
+                                 return Card(
+                                  color: Theme.of(context).colorScheme.surface,
                                   margin: const EdgeInsets.only(bottom: 12.0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
-                                    side: const BorderSide(color: Color(0xFF262938)),
+                                    side: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                                   ),
                                   child: ListTile(
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     leading: CircleAvatar(
-                                      backgroundImage: avatar != null ? NetworkImage(avatar) : null,
-                                      backgroundColor: const Color(0xFF1A1C26),
+                                      backgroundImage: avatar != null ? NetworkImage(provider.getMediaUrl(avatar)) : null,
+                                      backgroundColor: isDark ? const Color(0xFF1A1C26) : const Color(0xFFE5E7EB),
                                       child: avatar == null
                                           ? Text(
                                               fullName.substring(0, 1).toUpperCase(),
-                                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1F2937)),
                                             )
                                           : null,
                                     ),
@@ -137,7 +138,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                                         Expanded(
                                           child: Text(
                                             fullName,
-                                            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                            style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937), fontWeight: FontWeight.bold, fontSize: 15),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),

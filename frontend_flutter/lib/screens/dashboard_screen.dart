@@ -70,10 +70,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         : (user?['username'] ?? 'User');
     String subtitle = isSuperAdmin ? '$name  |  Super Admin' : '$name  |  School Teacher';
 
+    final isDark = provider.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF12131A),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
               ),
             ),
             if (user != null && currentIndex == 0)
@@ -135,8 +137,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : screens[currentIndex],
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFF262938), width: 1)),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB), width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: currentIndex,
@@ -145,9 +147,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _selectedIndex = index;
             });
           },
-          backgroundColor: const Color(0xFF12131A),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           selectedItemColor: const Color(0xFF6366F1),
-          unselectedItemColor: const Color(0xFF9CA3AF),
+          unselectedItemColor: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
           selectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           unselectedLabelStyle: GoogleFonts.outfit(),
           type: BottomNavigationBarType.fixed,
@@ -205,9 +207,14 @@ class HomeDashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<PortalProvider>(context);
     final stats = provider.dashboardStats;
+    final isDark = provider.isDarkMode;
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final subtitleColor = isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563);
+    final borderColor = isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surface;
 
     if (stats == null) {
-      return const Center(child: Text('No stats available', style: TextStyle(color: Colors.white)));
+      return Center(child: Text('No stats available', style: TextStyle(color: textColor)));
     }
 
     final int totalStudents = stats['total_students'] ?? 0;
@@ -231,6 +238,7 @@ class HomeDashboardView extends StatelessWidget {
               children: [
                 Expanded(
                   child: _buildMetricCard(
+                    context,
                     title: 'Students',
                     value: totalStudents.toString(),
                     icon: Icons.people_outline,
@@ -240,6 +248,7 @@ class HomeDashboardView extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _buildMetricCard(
+                    context,
                     title: 'Attendance',
                     value: '$attendanceRate%',
                     icon: Icons.calendar_month_outlined,
@@ -253,6 +262,7 @@ class HomeDashboardView extends StatelessWidget {
               children: [
                 Expanded(
                   child: _buildMetricCard(
+                    context,
                     title: 'Class Average',
                     value: '$gradeAverage%',
                     icon: Icons.assessment_outlined,
@@ -262,6 +272,7 @@ class HomeDashboardView extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _buildMetricCard(
+                    context,
                     title: 'Pending Tasks',
                     value: pendingTasks.toString(),
                     icon: Icons.assignment_late_outlined,
@@ -275,7 +286,7 @@ class HomeDashboardView extends StatelessWidget {
             // Quick Shortcuts Grid
             Text(
               'Quick Administrative Tools',
-              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
             ),
             const SizedBox(height: 10),
             builderCurrentUserShortcut(context, provider),
@@ -287,7 +298,7 @@ class HomeDashboardView extends StatelessWidget {
               children: [
                 Text(
                   'Noticeboard Announcements',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
                 ),
                 TextButton(
                   onPressed: () {
@@ -300,7 +311,7 @@ class HomeDashboardView extends StatelessWidget {
             const SizedBox(height: 8),
 
             recentNotices.isEmpty
-                ? _buildEmptyFeed('No class circular announcements')
+                ? _buildEmptyFeed(context, 'No class circular announcements')
                 : ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -311,8 +322,8 @@ class HomeDashboardView extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.all(14.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF12131A),
-                          border: Border.all(color: const Color(0xFF262938)),
+                          color: cardBg,
+                          border: Border.all(color: borderColor),
                           borderRadius: BorderRadius.circular(14.0),
                         ),
                         child: Column(
@@ -320,12 +331,12 @@ class HomeDashboardView extends StatelessWidget {
                           children: [
                             Text(
                               item['title'],
-                              style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              style: GoogleFonts.outfit(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               item['content'],
-                              style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 13),
+                              style: GoogleFonts.outfit(color: subtitleColor, fontSize: 13),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -334,17 +345,23 @@ class HomeDashboardView extends StatelessWidget {
                       );
                     },
                   ),
-            const SizedBox(height: 20),
 
-            // Behavior log feed
-            Text(
-              'Recent Behavior remarks',
-              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            const SizedBox(height: 24),
+
+            // Behavior Logs
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recent Student Conduct Log',
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             recentRemarks.isEmpty
-                ? _buildEmptyFeed('No conduct feedback logged recently')
+                ? _buildEmptyFeed(context, 'No conduct feedback logged recently')
                 : ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -356,8 +373,8 @@ class HomeDashboardView extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF12131A),
-                          border: Border.all(color: const Color(0xFF262938)),
+                          color: cardBg,
+                          border: Border.all(color: borderColor),
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                         child: Row(
@@ -369,11 +386,22 @@ class HomeDashboardView extends StatelessWidget {
                             ),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: Text(
-                                '${item['student_name']} received "${item['title']}"',
-                                style: GoogleFonts.outfit(color: const Color(0xFFD1D5DB), fontSize: 13),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['student_name'] ?? 'Student',
+                                    style: GoogleFonts.outfit(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                  Text(
+                                    item['remark'] ?? '',
+                                    style: GoogleFonts.outfit(color: subtitleColor, fontSize: 11),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                            )
+                            ),
                           ],
                         ),
                       );
@@ -385,17 +413,24 @@ class HomeDashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricCard({
+  Widget _buildMetricCard(
+    BuildContext context, {
     required String title,
     required String value,
     required IconData icon,
     required Color iconColor,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = Theme.of(context).colorScheme.surface;
+    final borderColor = isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB);
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final subtitleColor = isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF12131A),
-        border: Border.all(color: const Color(0xFF262938)),
+        color: cardBg,
+        border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(16.0),
       ),
       child: Row(
@@ -407,7 +442,7 @@ class HomeDashboardView extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 12),
+                  style: GoogleFonts.outfit(color: subtitleColor, fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
@@ -416,7 +451,7 @@ class HomeDashboardView extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: textColor,
                   ),
                 ),
               ],
@@ -443,6 +478,11 @@ class HomeDashboardView extends StatelessWidget {
     required Color color,
     required Widget screen,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = Theme.of(context).colorScheme.surface;
+    final borderColor = isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB);
+    final labelColor = isDark ? Colors.white70 : const Color(0xFF4B5563);
+
     return InkWell(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
@@ -451,8 +491,8 @@ class HomeDashboardView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF12131A),
-          border: Border.all(color: const Color(0xFF262938)),
+          color: cardBg,
+          border: Border.all(color: borderColor),
           borderRadius: BorderRadius.circular(14.0),
         ),
         child: Column(
@@ -463,7 +503,7 @@ class HomeDashboardView extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
-                color: Colors.white70,
+                color: labelColor,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -531,17 +571,22 @@ class HomeDashboardView extends StatelessWidget {
     }
   }
 
-  Widget _buildEmptyFeed(String msg) {
+  Widget _buildEmptyFeed(BuildContext context, String msg) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = Theme.of(context).colorScheme.surface;
+    final borderColor = isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB);
+    final subtitleColor = isDark ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFF12131A),
-        border: Border.all(color: const Color(0xFF262938)),
+        color: cardBg,
+        border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: Text(msg, style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 13)),
+      child: Text(msg, style: GoogleFonts.outfit(color: subtitleColor, fontSize: 13)),
     );
   }
 }

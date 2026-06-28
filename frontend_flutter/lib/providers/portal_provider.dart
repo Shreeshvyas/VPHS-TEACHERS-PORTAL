@@ -47,6 +47,8 @@ class PortalProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isDarkMode => _isDarkMode;
 
+  String getMediaUrl(String? path) => _apiService.getMediaUrl(path);
+
   Future<void> _loadThemePref() async {
     try {
       final prefs = await SharedPreferences.getInstance();

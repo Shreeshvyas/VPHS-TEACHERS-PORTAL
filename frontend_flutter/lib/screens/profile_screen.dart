@@ -29,7 +29,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _ifscController;
 
   String? _profilePicPath;
-  String? _docPath;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -67,32 +66,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage(bool isProfile) async {
+  Future<void> _pickImage() async {
     try {
-      if (isProfile) {
-        final XFile? image = await _picker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 70,
-        );
-        if (image != null) {
-          setState(() {
-            _profilePicPath = image.path;
-          });
-        }
-      } else {
-        final FilePickerResult? result = await FilePicker.platform.pickFiles(
-          type: FileType.any,
-        );
-        if (result != null && result.files.single.path != null) {
-          setState(() {
-            _docPath = result.files.single.path;
-          });
-        }
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        setState(() {
+          _profilePicPath = image.path;
+        });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to select file: $e')),
+          SnackBar(content: Text('Failed to select image: $e')),
         );
       }
     }
@@ -115,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ifsc: _ifscController.text.trim(),
       employeeId: _employeeIdController.text.trim(),
       profilePicPath: _profilePicPath,
-      docPath: _docPath,
+      docPath: null,
     );
 
     if (mounted) {
@@ -380,7 +368,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = user?['profile'];
 
     final String? serverProfilePic = profile?['profile_picture'];
-    final String? serverDoc = profile?['document_file'];
 
     final isDark = provider.isDarkMode;
     final bgColor = isDark ? const Color(0xFF0A0B10) : const Color(0xFFF3F4F6);
@@ -436,7 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 backgroundImage: _profilePicPath != null
                                     ? FileImage(File(_profilePicPath!))
                                     : (serverProfilePic != null
-                                        ? NetworkImage(serverProfilePic)
+                                        ? NetworkImage(provider.getMediaUrl(serverProfilePic))
                                         : null) as ImageProvider?,
                                 child: _profilePicPath == null && serverProfilePic == null
                                     ? Text(
@@ -449,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 bottom: 0,
                                 right: 0,
                                 child: InkWell(
-                                  onTap: () => _pickImage(true),
+                                  onTap: () => _pickImage(),
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: const BoxDecoration(
@@ -487,43 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildTextField('Account Number', _bankAccountController),
                         _buildTextField('IFSC Code', _ifscController),
 
-                        const SizedBox(height: 16),
-                        Text(
-                          'Primary Verification Proof',
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF6366F1),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        
-                        Row(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () => _pickImage(false),
-                              icon: const Icon(Icons.upload_file, color: Colors.white),
-                              label: Text('Select Doc', style: GoogleFonts.outfit(color: Colors.white)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6366F1),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                _docPath != null
-                                    ? 'Selected: ${_docPath!.split('/').last}'
-                                    : (serverDoc != null ? 'Verification Document uploaded' : 'No document uploaded'),
-                                style: GoogleFonts.outfit(color: subtitleColor, fontSize: 13),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )
-                          ],
-                        ),
-
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: provider.isLoading ? null : _saveProfile,
                           style: ElevatedButton.styleFrom(
@@ -688,7 +639,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (docUrl != null)
                           IconButton(
                             icon: const Icon(Icons.download, size: 18, color: Color(0xFF6366F1)),
-                            onPressed: () => _launchUrl(docUrl),
+                            onPressed: () => _launchUrl(provider.getMediaUrl(docUrl)),
                           ),
                         IconButton(
                           icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),

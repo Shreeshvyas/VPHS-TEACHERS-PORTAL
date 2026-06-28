@@ -24,6 +24,17 @@ class ApiService {
     baseUrl = newUrl;
   }
 
+  String getMediaUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    final apiUri = Uri.parse(baseUrl);
+    final hostUrl = "${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}";
+    final cleanPath = path.startsWith('/') ? path : '/$path';
+    return "$hostUrl$cleanPath";
+  }
+
   // 1. Authenticate Teacher
   Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse('$baseUrl/login/');

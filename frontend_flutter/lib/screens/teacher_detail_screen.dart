@@ -114,7 +114,6 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
     final profile = widget.teacher['profile'];
     final fullName = '${widget.teacher['first_name'] ?? widget.teacher['username']} ${widget.teacher['last_name'] ?? ''}'.trim();
     final String? avatar = profile?['profile_picture'];
-    final String? docUrl = profile?['document_file'];
     final List<dynamic> documents = profile?['documents'] ?? [];
 
     final isDark = provider.isDarkMode;
@@ -160,7 +159,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                     children: [
                       CircleAvatar(
                         radius: 36,
-                        backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                        backgroundImage: avatar != null ? NetworkImage(provider.getMediaUrl(avatar)) : null,
                         backgroundColor: fieldFill,
                         child: avatar == null
                             ? Text(
@@ -223,51 +222,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
 
-              // Document Check
-              Card(
-                color: cardBg,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                  side: BorderSide(color: borderColor),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Verification Document',
-                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
-                      ),
-                      const SizedBox(height: 12),
-                      docUrl != null
-                          ? Row(
-                              children: [
-                                const Icon(Icons.file_present, color: Colors.redAccent),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Teacher ID/Degree Document uploaded.',
-                                    style: GoogleFonts.outfit(color: textColor, fontSize: 13),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.download, color: Color(0xFF6366F1)),
-                                  onPressed: () => _launchUrl(docUrl),
-                                )
-                              ],
-                            )
-                          : Text(
-                              'No identity proof document uploaded yet.',
-                              style: GoogleFonts.outfit(color: subtitleColor, fontSize: 12, fontStyle: FontStyle.italic),
-                            )
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
 
               // Administrative Controls
               Card(
@@ -381,7 +336,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                                   if (docUrl != null)
                                     IconButton(
                                       icon: const Icon(Icons.download, size: 18, color: Color(0xFF6366F1)),
-                                      onPressed: () => _launchUrl(docUrl),
+                                      onPressed: () => _launchUrl(provider.getMediaUrl(docUrl)),
                                     ),
                                 ],
                               ),

@@ -104,13 +104,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       _initializeData();
     }
 
+    final isDark = provider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B10),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF12131A),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text(
           'Daily Attendance',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1F2937)),
         ),
         actions: [
           IconButton(
@@ -124,13 +126,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           // Date Selector Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: const Color(0xFF12131A),
+            color: Theme.of(context).colorScheme.surface,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Register Date:',
-                  style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 14),
+                  style: GoogleFonts.outfit(color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563), fontSize: 14),
                 ),
                 TextButton.icon(
                   onPressed: () async {
@@ -151,7 +153,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   label: Text(
                     "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}",
                     style: GoogleFonts.outfit(
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -180,8 +182,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       return Container(
                         padding: const EdgeInsets.all(14.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF12131A),
-                          border: Border.all(color: const Color(0xFF262938)),
+                          color: Theme.of(context).colorScheme.surface,
+                          border: Border.all(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                           borderRadius: BorderRadius.circular(16.0),
                         ),
                         child: Column(
@@ -199,14 +201,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                         style: GoogleFonts.outfit(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: isDark ? Colors.white : const Color(0xFF1F2937),
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         'Roll: ${student.rollNumber}  |  Class: ${student.grade}',
                                         style: GoogleFonts.outfit(
-                                          color: const Color(0xFF9CA3AF),
+                                          color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
                                           fontSize: 12,
                                         ),
                                       ),
@@ -223,16 +225,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             // Remarks input field
                             TextField(
                               controller: _remarksControllers[student.id],
-                              style: const TextStyle(color: Colors.white, fontSize: 13),
+                              style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1F2937), fontSize: 13),
                               decoration: InputDecoration(
                                 hintText: 'Remarks / Reason (e.g. sick leave)',
-                                hintStyle: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 12),
+                                hintStyle: GoogleFonts.outfit(color: isDark ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF), fontSize: 12),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 filled: true,
-                                fillColor: const Color(0xFF1A1C26),
+                                fillColor: isDark ? const Color(0xFF1A1C26) : const Color(0xFFF9FAFB),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(color: Color(0xFF262938)),
+                                  borderSide: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
