@@ -20,6 +20,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
   late TextEditingController _totalLeavesController;
   late TextEditingController _leavesTakenController;
   late TextEditingController _passwordController;
+  bool _obscureResetPassword = true;
 
   @override
   void initState() {
@@ -422,12 +423,14 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
     final fill = isDark ? const Color(0xFF1A1C26) : const Color(0xFFF9FAFB);
     final border = isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB);
 
+    final isPasswordField = label.contains('Password');
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
         controller: controller,
         keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-        obscureText: label.contains('Password'),
+        obscureText: isPasswordField ? _obscureResetPassword : false,
         style: GoogleFonts.outfit(color: textColor),
         decoration: InputDecoration(
           labelText: label,
@@ -442,6 +445,19 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFF6366F1)),
           ),
+          suffixIcon: isPasswordField
+              ? IconButton(
+                  icon: Icon(
+                    _obscureResetPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: subtitleColor,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureResetPassword = !_obscureResetPassword;
+                    });
+                  },
+                )
+              : null,
         ),
         validator: (val) {
           if (isRequired && (val == null || val.isEmpty)) return 'Please enter value';

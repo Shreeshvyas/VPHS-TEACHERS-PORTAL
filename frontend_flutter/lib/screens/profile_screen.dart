@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/portal_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -68,18 +69,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickImage(bool isProfile) async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 70,
-      );
-      if (image != null) {
-        setState(() {
-          if (isProfile) {
+      if (isProfile) {
+        final XFile? image = await _picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 70,
+        );
+        if (image != null) {
+          setState(() {
             _profilePicPath = image.path;
-          } else {
-            _docPath = image.path;
-          }
-        });
+          });
+        }
+      } else {
+        final FilePickerResult? result = await FilePicker.platform.pickFiles(
+          type: FileType.any,
+        );
+        if (result != null && result.files.single.path != null) {
+          setState(() {
+            _docPath = result.files.single.path;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -146,13 +154,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _uploadMultipleDocPicker() async {
     try {
-      final XFile? file = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
       );
-      if (file == null) return;
+      if (result == null || result.files.single.path == null) return;
       
-      final nameController = TextEditingController(text: file.name);
+      final filePath = result.files.single.path!;
+      final fileName = result.files.single.name;
+      final nameController = TextEditingController(text: fileName);
       
       if (!mounted) return;
       showDialog(
@@ -174,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'File selected: ${file.name}',
+                  'File selected: $fileName',
                   style: GoogleFonts.outfit(fontSize: 13, color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563)),
                 ),
                 const SizedBox(height: 12),
@@ -198,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () async {
                   final provider = Provider.of<PortalProvider>(context, listen: false);
                   Navigator.pop(context);
-                  final success = await provider.uploadDocument(file.path, nameController.text.trim());
+                  final success = await provider.uploadDocument(filePath, nameController.text.trim());
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -225,96 +234,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmPasswordController = TextEditingController();
     final dialogKey = GlobalKey<FormState>();
 
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
     showDialog(
       context: context,
       builder: (context) {
-        final isDark = Provider.of<PortalProvider>(context).isDarkMode;
-        return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF12131A) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
-          ),
-          title: Text(
-            'Change Password',
-            style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937), fontWeight: FontWeight.bold),
-          ),
-          content: Form(
-            key: dialogKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: oldPasswordController,
-                    obscureText: true,
-                    style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937)),
-                    decoration: InputDecoration(
-                      labelText: 'Current Password',
-                      labelStyle: GoogleFonts.outfit(color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563)),
-                    ),
-                    validator: (val) => val == null || val.isEmpty ? 'Please enter current password' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: newPasswordController,
-                    obscureText: true,
-                    style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937)),
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      labelStyle: GoogleFonts.outfit(color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563)),
-                    ),
-                    validator: (val) => val == null || val.length < 6 ? 'Password must be at least 6 characters' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: confirmPasswordController,
-                    obscureText: true,
-                    style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937)),
-                    decoration: InputDecoration(
-                      labelText: 'Confirm New Password',
-                      labelStyle: GoogleFonts.outfit(color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563)),
-                    ),
-                    validator: (val) {
-                      if (val != newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF))),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6366F1)),
-              onPressed: () async {
-                if (!dialogKey.currentState!.validate()) return;
-                
-                final provider = Provider.of<PortalProvider>(context, listen: false);
-                final success = await provider.changePassword(
-                  oldPasswordController.text,
-                  newPasswordController.text,
-                );
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isDark = Provider.of<PortalProvider>(context).isDarkMode;
+            final textStyle = GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937));
+            final labelStyle = GoogleFonts.outfit(color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563));
 
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(success ? 'Password updated successfully!' : (provider.errorMessage ?? 'Failed to update password')),
-                      backgroundColor: success ? Colors.green : Colors.redAccent,
-                    ),
-                  );
-                }
-              },
-              child: Text('Update', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF12131A) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
+              ),
+              title: Text(
+                'Change Password',
+                style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937), fontWeight: FontWeight.bold),
+              ),
+              content: Form(
+                key: dialogKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: oldPasswordController,
+                        obscureText: obscureOld,
+                        style: textStyle,
+                        decoration: InputDecoration(
+                          labelText: 'Current Password',
+                          labelStyle: labelStyle,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                obscureOld = !obscureOld;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (val) => val == null || val.isEmpty ? 'Please enter current password' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: newPasswordController,
+                        obscureText: obscureNew,
+                        style: textStyle,
+                        decoration: InputDecoration(
+                          labelText: 'New Password',
+                          labelStyle: labelStyle,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                obscureNew = !obscureNew;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (val) => val == null || val.length < 6 ? 'Password must be at least 6 characters' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: confirmPasswordController,
+                        obscureText: obscureConfirm,
+                        style: textStyle,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm New Password',
+                          labelStyle: labelStyle,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                obscureConfirm = !obscureConfirm;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (val) {
+                          if (val != newPasswordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF))),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6366F1)),
+                  onPressed: () async {
+                    if (!dialogKey.currentState!.validate()) return;
+                    
+                    final provider = Provider.of<PortalProvider>(context, listen: false);
+                    final success = await provider.changePassword(
+                      oldPasswordController.text,
+                      newPasswordController.text,
+                    );
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'Password updated successfully!' : (provider.errorMessage ?? 'Failed to update password')),
+                          backgroundColor: success ? Colors.green : Colors.redAccent,
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('Update', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
         );
       },
     );
