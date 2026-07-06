@@ -318,6 +318,47 @@ class TeacherViewSet(viewsets.ModelViewSet):
             return User.objects.all().order_by('username')
         return User.objects.filter(id=self.request.user.id)
 
+    def create(self, request, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.is_staff):
+            return Response({"detail": "Only Super Admins can add teachers."}, status=status.HTTP_403_FORBIDDEN)
+            
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '').strip()
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        email = request.data.get('email', '').strip()
+        
+        employee_id = request.data.get('employee_id', '').strip()
+        class_assigned = request.data.get('class_assigned', '').strip()
+        phone = request.data.get('phone', '').strip()
+        
+        if not username or not password or not first_name or not email:
+            return Response({"non_field_errors": ["Username, password, first_name, and email are required."]}, status=400)
+            
+        if User.objects.filter(username=username).exists():
+            return Response({"non_field_errors": [f"Username '{username}' is already taken."]}, status=400)
+            
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                email=email
+            )
+            profile = user.profile
+            if employee_id:
+                profile.employee_id = employee_id
+            if class_assigned:
+                profile.class_assigned = class_assigned
+            if phone:
+                profile.phone = phone
+            profile.save()
+            
+            return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     def update(self, request, *args, **kwargs):
         if not (request.user.is_superuser or request.user.is_staff):
             return Response({"detail": "Only Super Admins can update other teachers."}, status=status.HTTP_403_FORBIDDEN)
@@ -340,6 +381,17 @@ class TeacherViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(UserSerializer(user, context={'request': request}).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.is_staff):
+            return Response({"detail": "Only Super Admins can remove teachers."}, status=status.HTTP_403_FORBIDDEN)
+            
+        user = self.get_object()
+        if user.is_superuser:
+            return Response({"detail": "Super Admins cannot be deleted."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        self.perform_destroy(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 

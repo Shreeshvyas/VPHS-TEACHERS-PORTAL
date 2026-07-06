@@ -347,6 +347,91 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
+
+              // Danger Zone Deletion
+              Card(
+                color: isDark ? const Color(0xFF1F1315) : const Color(0xFFFEF2F2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                  side: BorderSide(color: Colors.redAccent.withOpacity(0.3)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Danger Zone',
+                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Completely remove this teacher account from the database. All student assignments and notices belonging to them will also be deleted.',
+                        style: GoogleFonts.outfit(color: subtitleColor, fontSize: 12, height: 1.4),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: provider.isLoading ? null : () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: isDark ? const Color(0xFF12131A) : Colors.white,
+                              title: Text('Delete Teacher?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1F2937))),
+                              content: Text(
+                                'Are you sure you want to completely remove this teacher account? This action is irreversible.',
+                                style: GoogleFonts.outfit(color: isDark ? Colors.white70 : const Color(0xFF4B5563)),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF))),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text('Delete', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          );
+                          
+                          if (confirm == true) {
+                            final success = await provider.deleteTeacherByAdmin(widget.teacher['id']);
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Teacher account successfully removed.'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                              Navigator.pop(context); // Go back to teachers list
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(provider.errorMessage ?? 'Failed to delete teacher.'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.delete_forever, size: 18),
+                        label: Text(
+                          'Remove Teacher Account',
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),

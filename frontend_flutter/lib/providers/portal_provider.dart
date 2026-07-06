@@ -490,6 +490,55 @@ class PortalProvider extends ChangeNotifier {
     }
   }
 
+  // 15.5 Add Teacher as Admin (Super Admin only)
+  Future<bool> addTeacherByAdmin(Map<String, dynamic> data) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final newUser = await _apiService.addTeacherByAdmin(
+        token: _token!,
+        data: data,
+      );
+      // Add to local teachers list and sort
+      _teachers.add(newUser);
+      _teachers.sort((a, b) => (a['username'] ?? '').compareTo(b['username'] ?? ''));
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // 15.6 Delete Teacher as Admin (Super Admin only)
+  Future<bool> deleteTeacherByAdmin(int teacherId) async {
+    if (!isAuthenticated) return false;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _apiService.deleteTeacherByAdmin(
+        token: _token!,
+        teacherId: teacherId,
+      );
+      // Remove from local teachers list
+      _teachers.removeWhere((t) => t['id'] == teacherId);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      notifyListeners();
+      return false;
+    }
+  }
+
   // 16. Change Password
   Future<bool> changePassword(String oldPassword, String newPassword) async {
     if (!isAuthenticated) return false;

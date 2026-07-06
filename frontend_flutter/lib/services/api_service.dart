@@ -527,6 +527,54 @@ class ApiService {
     }
   }
 
+  // 19.5 Add Teacher by Admin (Super Admin only)
+  Future<Map<String, dynamic>> addTeacherByAdmin({
+    required String token,
+    required Map<String, dynamic> data,
+  }) async {
+    final url = Uri.parse('$baseUrl/teachers/');
+    try {
+      final response = await http.post(
+        url,
+        headers: _getHeaders(token),
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        final errBody = jsonDecode(response.body);
+        final errMsg = (errBody['non_field_errors'] is List)
+            ? errBody['non_field_errors']?.join(', ')
+            : errBody['detail'] ?? 'Failed to register teacher';
+        throw Exception(errMsg);
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // 19.6 Delete Teacher by Admin (Super Admin only)
+  Future<void> deleteTeacherByAdmin({
+    required String token,
+    required int teacherId,
+  }) async {
+    final url = Uri.parse('$baseUrl/teachers/$teacherId/');
+    try {
+      final response = await http.delete(
+        url,
+        headers: _getHeaders(token),
+      );
+
+      if (response.statusCode != 204) {
+        final errBody = jsonDecode(response.body);
+        throw Exception(errBody['detail'] ?? 'Failed to delete teacher');
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   // 20. Change password
   Future<void> changePassword(String token, String oldPassword, String newPassword) async {
     final url = Uri.parse('$baseUrl/profile/change-password/');

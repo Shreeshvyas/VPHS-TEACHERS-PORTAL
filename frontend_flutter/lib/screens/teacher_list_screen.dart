@@ -52,7 +52,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
               padding: const EdgeInsets.all(16.0),
               child: TextFormField(
                 controller: _searchController,
-                style: GoogleFonts.outfit(color: Colors.white),
+                style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937)),
                 onChanged: (val) {
                   setState(() {
                     _searchQuery = val.trim();
@@ -63,11 +63,11 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                   hintStyle: GoogleFonts.outfit(color: const Color(0xFF9CA3AF)),
                   prefixIcon: const Icon(Icons.search, color: Color(0xFF6366F1)),
                   filled: true,
-                  fillColor: const Color(0xFF12131A),
+                  fillColor: isDark ? const Color(0xFF12131A) : const Color(0xFFF3F4F6),
                   contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF262938)),
+                    borderSide: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -192,6 +192,238 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: (provider.currentUser != null && provider.currentUser!['is_super_admin'] == true)
+          ? FloatingActionButton(
+              onPressed: () => _showAddTeacherDialog(context),
+              backgroundColor: const Color(0xFF6366F1),
+              child: const Icon(Icons.person_add, color: Colors.white),
+            )
+          : null,
+    );
+  }
+
+  void _showAddTeacherDialog(BuildContext context) {
+    final provider = Provider.of<PortalProvider>(context, listen: false);
+    final isDark = provider.isDarkMode;
+    
+    final usernameController = TextEditingController();
+    final passwordController = TextEditingController();
+    final firstNameController = TextEditingController();
+    final lastNameController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+    final employeeIdController = TextEditingController();
+    final classController = TextEditingController();
+    
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF12131A) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
+              ),
+              title: Row(
+                children: [
+                  const Icon(Icons.person_add, color: Color(0xFF6366F1)),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Add New Teacher',
+                    style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildDialogField(
+                          controller: usernameController,
+                          label: 'Username *',
+                          hint: 'e.g. sarah_c',
+                          isDark: isDark,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                        ),
+                        _buildDialogField(
+                          controller: passwordController,
+                          label: 'Password *',
+                          hint: 'e.g. securepwd123',
+                          isDark: isDark,
+                          obscureText: true,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                        ),
+                        _buildDialogField(
+                          controller: firstNameController,
+                          label: 'First Name *',
+                          hint: 'e.g. Sarah',
+                          isDark: isDark,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                        ),
+                        _buildDialogField(
+                          controller: lastNameController,
+                          label: 'Last Name',
+                          hint: 'e.g. Connor',
+                          isDark: isDark,
+                        ),
+                        _buildDialogField(
+                          controller: emailController,
+                          label: 'Email Address *',
+                          hint: 'e.g. sarah@email.com',
+                          isDark: isDark,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                        ),
+                        _buildDialogField(
+                          controller: phoneController,
+                          label: 'Phone Number',
+                          hint: 'e.g. +91 98765 43210',
+                          isDark: isDark,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        _buildDialogField(
+                          controller: employeeIdController,
+                          label: 'Employee ID',
+                          hint: 'e.g. EMP-1002',
+                          isDark: isDark,
+                        ),
+                        _buildDialogField(
+                          controller: classController,
+                          label: 'Class Teacher Assignment',
+                          hint: 'e.g. Class 10-A',
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF)),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      final data = {
+                        'username': usernameController.text.trim(),
+                        'password': passwordController.text.trim(),
+                        'first_name': firstNameController.text.trim(),
+                        'last_name': lastNameController.text.trim(),
+                        'email': emailController.text.trim(),
+                        'phone': phoneController.text.trim(),
+                        'employee_id': employeeIdController.text.trim(),
+                        'class_assigned': classController.text.trim(),
+                      };
+                      
+                      Navigator.pop(context); // Close dialog
+                      
+                      // Show loading overlay
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Registering teacher account...'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+
+                      final success = await provider.addTeacherByAdmin(data);
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Teacher registered successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(provider.errorMessage ?? 'Failed to register teacher.'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text(
+                    'Register',
+                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required bool isDark,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            validator: validator,
+            style: GoogleFonts.outfit(color: isDark ? Colors.white : const Color(0xFF1F2937), fontSize: 14),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.outfit(color: isDark ? const Color(0xFF4B5563) : const Color(0xFF9CA3AF), fontSize: 13),
+              filled: true,
+              fillColor: isDark ? const Color(0xFF1A1C26) : const Color(0xFFF3F4F6),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF6366F1)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
