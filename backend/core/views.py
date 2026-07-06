@@ -915,3 +915,69 @@ def web_teacher_detail(request, pk):
     }
     return render(request, 'core/teacher_detail.html', context)
 
+
+@login_required
+def web_add_teacher(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, "Only Super Admins can add teachers.")
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        
+        employee_id = request.POST.get('employee_id', '').strip()
+        class_assigned = request.POST.get('class_assigned', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        
+        if not username or not password or not first_name or not email:
+            messages.error(request, "Please fill in all required fields (Username, Password, First Name, Email).")
+            return redirect('web_teachers')
+            
+        if User.objects.filter(username=username).exists():
+            messages.error(request, f"Username '{username}' is already taken.")
+            return redirect('web_teachers')
+            
+        try:
+            # Create user
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                email=email
+            )
+            # Profile is automatically created by django post_save signal
+            profile = user.profile
+            profile.employee_id = employee_id
+            profile.class_assigned = class_assigned
+            profile.phone = phone
+            profile.save()
+            
+            messages.success(request, f"Teacher {first_name} (@{username}) added successfully!")
+        except Exception as e:
+            messages.error(request, f"Error adding teacher: {str(e)}")
+            
+    return redirect('web_teachers')
+
+
+@login_required
+def web_delete_teacher(request, pk):
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, "Only Super Admins can remove teachers.")
+        return redirect('dashboard')
+        
+    teacher = get_object_or_404(User, pk=pk)
+    if teacher.is_superuser:
+        messages.error(request, "Super Admins cannot be deleted from the teacher directory.")
+        return redirect('web_teachers')
+        
+    name = f"{teacher.first_name} {teacher.last_name}" or teacher.username
+    teacher.delete()
+    messages.warning(request, f"Teacher {name} has been removed from the portal.")
+    return redirect('web_teachers')
+
+

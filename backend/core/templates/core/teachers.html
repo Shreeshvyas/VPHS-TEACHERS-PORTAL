@@ -10,83 +10,142 @@
     </div>
 </div>
 
-<div class="panel">
-    <div class="panel-header" style="margin-bottom: 24px;">
-        <h2 class="panel-title">Active Teachers ({{ teachers.count }})</h2>
+<div class="dashboard-layout" style="grid-template-columns: 2.2fr 1fr;">
+    <!-- Left Column: Teachers List -->
+    <div class="panel">
+        <div class="panel-header" style="margin-bottom: 24px;">
+            <h2 class="panel-title">Active Teachers ({{ teachers.count }})</h2>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+                        <th style="padding: 16px 12px;">Teacher Name</th>
+                        <th style="padding: 16px 12px;">Username</th>
+                        <th style="padding: 16px 12px;">Class Assigned</th>
+                        <th style="padding: 16px 12px;">Contact</th>
+                        <th style="padding: 16px 12px; text-align: center;">Leaves (Remaining / Total)</th>
+                        <th style="padding: 16px 12px; text-align: center;">Status</th>
+                        <th style="padding: 16px 12px; text-align: center;">Identity Doc</th>
+                        <th style="padding: 16px 12px; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in teachers %}
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-primary);">
+                        <td style="padding: 16px 12px; font-weight: bold; display: flex; align-items: center; gap: 10px;">
+                            {% if t.profile.profile_picture %}
+                                <img src="{{ t.profile.profile_picture.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                                    {{ t.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            {{ t.first_name }} {{ t.last_name|default:"" }}
+                            {% if t.is_superuser or t.is_staff %}
+                                <span class="badge badge-completed" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Admin</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 12px; color: var(--text-secondary);">@{{ t.username }}</td>
+                        <td style="padding: 16px 12px;">
+                            {% if t.profile.class_assigned %}
+                                <span style="font-weight: 600; color: var(--primary);">{{ t.profile.class_assigned }}</span>
+                            {% else %}
+                                <span style="color: var(--text-muted); font-style: italic;">Not Assigned</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 12px; color: var(--text-secondary);">
+                            <div>{{ t.email }}</div>
+                            <div style="font-size: 11px; margin-top: 2px;">{{ t.profile.phone|default:"-" }}</div>
+                        </td>
+                        <td style="padding: 16px 12px; text-align: center;">
+                            <strong>{{ t.profile.remaining_leaves }}</strong> / {{ t.profile.total_leaves }}
+                        </td>
+                        <td style="padding: 16px 12px; text-align: center;">
+                            {% if t.profile.remaining_leaves > 3 %}
+                                <span class="badge badge-completed">Good</span>
+                            {% elif t.profile.remaining_leaves > 0 %}
+                                <span class="badge badge-pending">Low</span>
+                            {% else %}
+                                <span class="badge badge-pending" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; border-color: rgba(220, 53, 69, 0.2);">Exhausted</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 12px; text-align: center;">
+                            {% if t.profile.documents.exists %}
+                                <a href="{% url 'web_teacher_detail' t.id %}" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-file-pdf" style="color: var(--primary);"></i> View Docs
+                                </a>
+                            {% else %}
+                                <span style="color: var(--text-muted); font-size: 11px;">Missing</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 12px; text-align: right;">
+                            <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: flex-end;">
+                                <a href="{% url 'web_teacher_detail' t.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-eye"></i> Manage
+                                </a>
+                                {% if not t.is_superuser %}
+                                    <a href="{% url 'web_delete_teacher' t.id %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; border-color: rgba(220, 53, 69, 0.2); color: #dc3545;" onclick="return confirm('Are you sure you want to completely remove this teacher? All their student assignments and notices will also be deleted.');">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-            <thead>
-                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
-                    <th style="padding: 16px 12px;">Teacher Name</th>
-                    <th style="padding: 16px 12px;">Username</th>
-                    <th style="padding: 16px 12px;">Class Assigned</th>
-                    <th style="padding: 16px 12px;">Contact</th>
-                    <th style="padding: 16px 12px; text-align: center;">Leaves (Remaining / Total)</th>
-                    <th style="padding: 16px 12px; text-align: center;">Status</th>
-                    <th style="padding: 16px 12px; text-align: center;">Identity Doc</th>
-                    <th style="padding: 16px 12px; text-align: right;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for t in teachers %}
-                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-primary);">
-                    <td style="padding: 16px 12px; font-weight: bold; display: flex; align-items: center; gap: 10px;">
-                        {% if t.profile.profile_picture %}
-                            <img src="{{ t.profile.profile_picture.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                        {% else %}
-                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
-                                {{ t.username|slice:":1"|upper }}
-                            </div>
-                        {% endif %}
-                        {{ t.first_name }} {{ t.last_name|default:"" }}
-                        {% if t.is_superuser or t.is_staff %}
-                            <span class="badge badge-completed" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Admin</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 16px 12px; color: var(--text-secondary);">@{{ t.username }}</td>
-                    <td style="padding: 16px 12px;">
-                        {% if t.profile.class_assigned %}
-                            <span style="font-weight: 600; color: var(--primary);">{{ t.profile.class_assigned }}</span>
-                        {% else %}
-                            <span style="color: var(--text-muted); font-style: italic;">Not Assigned</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 16px 12px; color: var(--text-secondary);">
-                        <div>{{ t.email }}</div>
-                        <div style="font-size: 11px; margin-top: 2px;">{{ t.profile.phone|default:"-" }}</div>
-                    </td>
-                    <td style="padding: 16px 12px; text-align: center;">
-                        <strong>{{ t.profile.remaining_leaves }}</strong> / {{ t.profile.total_leaves }}
-                    </td>
-                    <td style="padding: 16px 12px; text-align: center;">
-                        {% if t.profile.remaining_leaves > 3 %}
-                            <span class="badge badge-completed">Good</span>
-                        {% elif t.profile.remaining_leaves > 0 %}
-                            <span class="badge badge-pending">Low</span>
-                        {% else %}
-                            <span class="badge badge-pending" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; border-color: rgba(220, 53, 69, 0.2);">Exhausted</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 16px 12px; text-align: center;">
-                        {% if t.profile.documents.exists %}
-                            <a href="{% url 'web_teacher_detail' t.id %}" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-                                <i class="fa-solid fa-file-pdf" style="color: var(--primary);"></i> View Docs
-                            </a>
-                        {% else %}
-                            <span style="color: var(--text-muted); font-size: 11px;">Missing</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 16px 12px; text-align: right;">
-                        <a href="{% url 'web_teacher_detail' t.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 11px;">
-                            <i class="fa-solid fa-eye"></i> Manage
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Right Column: Add Teacher Form -->
+    <div class="panel">
+        <h2 class="panel-title" style="margin-bottom: 20px;">
+            <i class="fa-solid fa-user-plus" style="color: var(--primary); margin-right: 8px;"></i>
+            Register Teacher
+        </h2>
+        
+        <form method="POST" action="{% url 'web_add_teacher' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username (Unique) *</label>
+                <input type="text" id="username" name="username" required class="form-control" placeholder="e.g. sarah_c">
+            </div>
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" required class="form-control" placeholder="e.g. securepwd123">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label for="first_name">First Name *</label>
+                    <input type="text" id="first_name" name="first_name" required class="form-control" placeholder="e.g. Sarah">
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" placeholder="e.g. Connor">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required class="form-control" placeholder="e.g. sarah@email.com">
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="e.g. +91 98765 43210">
+            </div>
+            <div class="form-group">
+                <label for="employee_id">Employee ID (Provided by School)</label>
+                <input type="text" id="employee_id" name="employee_id" class="form-control" placeholder="e.g. EMP-1002">
+            </div>
+            <div class="form-group">
+                <label for="class_assigned">Assign Class Teacher Role</label>
+                <input type="text" id="class_assigned" name="class_assigned" class="form-control" placeholder="e.g. Class 10-A">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; height: 42px;">
+                <i class="fa-solid fa-plus"></i> Add Teacher Account
+            </button>
+        </form>
     </div>
 </div>
 {% endblock %}

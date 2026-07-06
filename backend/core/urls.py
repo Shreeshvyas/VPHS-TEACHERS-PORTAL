@@ -32,7 +32,9 @@ urlpatterns = [
     path('profile/documents/upload/', views.web_upload_document, name='web_upload_document'),
     path('profile/documents/<int:pk>/delete/', views.web_delete_document, name='web_delete_document'),
     path('teachers/', views.web_teachers, name='web_teachers'),
+    path('teachers/add/', views.web_add_teacher, name='web_add_teacher'),
     path('teachers/<int:pk>/', views.web_teacher_detail, name='web_teacher_detail'),
+    path('teachers/<int:pk>/delete/', views.web_delete_teacher, name='web_delete_teacher'),
     
     # API endpoints for Flutter App
     path('api/', include(router.urls)),

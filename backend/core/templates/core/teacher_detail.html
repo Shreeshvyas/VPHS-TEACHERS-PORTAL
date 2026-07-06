@@ -106,6 +106,19 @@
                         <button type="submit" class="btn btn-primary" style="padding: 8px 14px; font-size: 12px;">Save Assignment</button>
                     </form>
                 </div>
+
+                <!-- Danger Zone Section -->
+                <div style="margin-top: 24px; border-top: 1px solid rgba(220, 53, 69, 0.2); padding-top: 20px;">
+                    <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #dc3545;">Danger Zone</h3>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">Completely remove this teacher from the database. All student assignments and notices belonging to them will also be deleted.</p>
+                    {% if not teacher_user.is_superuser %}
+                        <a href="{% url 'web_delete_teacher' teacher_user.id %}" class="btn" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.2); color: #dc3545; padding: 8px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; text-decoration: none; border-radius: 6px;" onclick="return confirm('Are you sure you want to completely remove this teacher? All their student assignments and notices will also be deleted.');">
+                            <i class="fa-solid fa-user-xmark"></i> Remove Teacher Account
+                        </a>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 11px; font-style: italic;">Super Admins cannot be deleted.</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
