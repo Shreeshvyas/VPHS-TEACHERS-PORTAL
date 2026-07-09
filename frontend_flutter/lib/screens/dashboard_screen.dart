@@ -129,13 +129,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
         ],
-        shape: const Border(
-          bottom: BorderSide(color: Color(0xFF262938), width: 1),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(2),
+          child: provider.isLoading
+              ? const LinearProgressIndicator(
+                  color: Color(0xFF6366F1),
+                  backgroundColor: Colors.transparent,
+                )
+              : Container(
+                  color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB),
+                  height: 1,
+                ),
         ),
       ),
-      body: (!isSuperAdmin && provider.isLoading && provider.students.isEmpty)
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : screens[currentIndex],
+      body: screens[currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB), width: 1)),
@@ -214,7 +221,11 @@ class HomeDashboardView extends StatelessWidget {
     final cardBg = Theme.of(context).colorScheme.surface;
 
     if (stats == null) {
-      return Center(child: Text('No stats available', style: TextStyle(color: textColor)));
+      return Center(
+        child: provider.isLoading
+            ? const CircularProgressIndicator(color: Color(0xFF6366F1))
+            : Text('No stats available', style: TextStyle(color: textColor)),
+      );
     }
 
     final int totalStudents = stats['total_students'] ?? 0;
