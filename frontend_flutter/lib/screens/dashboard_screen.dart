@@ -142,7 +142,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
         ),
       ),
-      body: screens[currentIndex],
+      body: IndexedStack(
+        index: currentIndex,
+        children: screens,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: isDark ? const Color(0xFF262938) : const Color(0xFFE5E7EB), width: 1)),
