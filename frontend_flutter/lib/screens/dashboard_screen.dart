@@ -133,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottom: BorderSide(color: Color(0xFF262938), width: 1),
         ),
       ),
-      body: provider.isLoading && provider.students.isEmpty
+      body: (!isSuperAdmin && provider.isLoading && provider.students.isEmpty)
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : screens[currentIndex],
       bottomNavigationBar: Container(
